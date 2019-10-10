@@ -299,8 +299,10 @@ def _to_mseed_command():
     parser = argparse.ArgumentParser(
         description=__doc__)
     parser.add_argument("infile", help="Input filename(s)")
-    parser.add_argument("starttime", help="start time (UTC...)")
-    parser.add_argument("endtime", help="start time (UTC...)")
+    parser.add_argument("starttime", default=None,
+                        help="start time (ISO8601, or seconds from file start)")
+    parser.add_argument("endtime", default=None, 
+                        help="end time (ISO8601, or seconds from starttime)")
     parser.add_argument("-g", "--granularity", type=int, default=86400,
                         help="granularity for reading (seconds)")
     parser.add_argument("-t","--obs_type", default='SPOBS2', help="obs type",

@@ -15,15 +15,17 @@ setuptools.setup(
     description="LCHEAPO data reading",
     long_description=long_description,
     long_description_content_type="text/x-rst; charset=UTF-8",
-    url="https://github.com/pypa/lcheapo_obspy",
+    url="https://github.com/WayneCrawford/lcheapo_obspy",
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
+          'obspy>=1.1',
+          'lcheapo>=0.7'
       ],
     entry_points={
          'console_scripts': [
              'lcplot=lcheapo_obspy.lc_read:_plot_command',
-             'lc2ms_w=lcheapo_obspy.lcdump:_to_mseed_command'
+             'lc2ms_w=lcheapo_obspy.lc_read:_to_mseed_command'
          ]
     },
     python_requires='>=3.6',
