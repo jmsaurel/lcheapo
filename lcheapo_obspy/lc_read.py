@@ -12,6 +12,12 @@ from obspy.core import UTCDateTime, Stream, Trace, Stats
 import argparse
 import numpy as np
 
+chan_maps = {'SPOBS1': ['SH3', 'BDH'],
+             'SPOBS2': ['BDH', 'SH2', 'SH1', 'SH3'],
+             'BBOBS': ['SH2', 'SH1', 'SHZ', 'BDH'],
+             'HYDROCT': ['BDH:00', 'BDH:01', 'BDH:02', 'BDH:03']}
+
+
 
 def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
          chan_map=None):
@@ -127,7 +133,7 @@ def _read_data(starttime, endtime, fp):
             np.array(block.convertDataTo24BitValues()))
     i=0
     for array in arrays:
-        stream.append(Trace(data=array.astype('float64'),header=stats[i]))
+        stream.append(Trace(data=array.astype('int32'),header=stats[i]))
         i += 1
     return stream.slice(starttime, endtime)
 
@@ -148,6 +154,8 @@ def _get_time_limits(starttime,endtime,fp):
     data_start, data_end = get_data_timelimits(fp)
     if not starttime:
         starttime = 0
+    if endtime == 0:
+        endtime = data_end
     if not endtime:
         endtime = 3600
     if isinstance(starttime, (float,int)):
@@ -220,28 +228,25 @@ def _stuff_info(stream, network, station, chan_map):
     return stream
 
 
-def _fill_chan_map(chan_map):
+def _fill_chan_map(inp):
     """
-    Fill and/or verify the channel mappings
+    Fill and/or verify channel mappings
+    
+    inp: either a known LCHEAPO INSTRUMENT MODEL or a list of channel names
     """
-    if isinstance(chan_map, str):
-        if chan_map == 'SPOBS_1' or chan_map == 'SPOBS1':
-            return ('SH3', 'BDH')
-        elif chan_map == 'SPOBS_2' or chan_map == 'SPOBS2':
-            return ('BDH', 'SH2', 'SH1', 'SH3')
-        elif chan_map[:5] == 'BBOBS':
-            return ('SH2', 'SH1', 'SHZ', 'BDH')
-        elif chan_map[:7] == 'HYDROCT':
-            return ('BDH:00', 'BDH:01', 'BDH:02', 'BDH:03')
+    if isinstance(inp, str):
+        if inp in chan_maps:
+            return chan_maps[inp]
         else:
-            print(f'Unknown LCHEAPO instrument: {chan_map}')
-    elif isinstance(chan_map, list):
-        if _valid_chan_map(chan_map):
-            return(chan_map)
+            print('Unknown LCHEAPO instrument: {}, choose from {}'.format(
+                inp, [s for s in chan_maps]))
+    elif isinstance(inp, list):
+        if _valid_chan_map(inp):
+            return(inp)
         else:
             print("Bad channel map")
     else:
-        print(f"Unsupported type for channel map: '{type(chan_map)}'")
+        print("Input is neither an instrument type nor a list of channel names")
     return None
 
 
@@ -277,11 +282,14 @@ def _plot_command():
     parser.add_argument("endtime", default=None, 
                         help="end time (ISO8601, or seconds from start time)")
     parser.add_argument("-t","--obs_type", default='SPOBS2', help="obs type",
-                        choices=['SPOBS1','SPOBS2','BBOBS','HYDROCT'])
+                        choices=[s for s in chan_maps])
     parser.add_argument("-n","--network", default='XX', help="network code")
     parser.add_argument("-s","--station", default='SSSSS', help="station code")
     args = parser.parse_args()
 
+    endtime = _normalize_time_arg(args.endtime)
+    if endtime==0:
+        endtime=3600.
     stream = read(args.infile, 
                   _normalize_time_arg(args.starttime),
                   _normalize_time_arg(args.endtime),
@@ -306,7 +314,7 @@ def _to_mseed_command():
     parser.add_argument("-g", "--granularity", type=int, default=86400,
                         help="granularity for reading (seconds)")
     parser.add_argument("-t","--obs_type", default='SPOBS2', help="obs type",
-                        choices=['SPOBS1','SPOBS2','BBOBS','HYDROCT'])
+                        choices=[s for s in chan_maps])
     parser.add_argument("-n","--network", default='XX', help="network code")
     parser.add_argument("-s","--station", default='SSSSS', help="station code")
     args = parser.parse_args()
