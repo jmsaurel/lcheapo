@@ -10,6 +10,11 @@
             offset_before: 0.5
             offset_after:  1.5
             plot_span: False
+        particle_motion:
+            offset_before: 0.01
+            offset_after: 0.05
+            offset_before_ts: 0.1
+            offset_after_ts: 0.2
     tests:
         -
             plot_type: time_series
@@ -56,7 +61,7 @@
         -
             plot_type: stack
             description: Lift E* end 
-            orientation_codes: ["2","3"]
+            orientation_codes: ["2","1"]
             times: 
                 - 2019-11-07T14:05:59.55
                 - 2019-11-07T14:06:19.45
@@ -64,7 +69,7 @@
         -
             plot_type: stack
             description: rubber hammer tap on top 
-            orientation_codes: ["1"]
+            orientation_codes: ["3"]
             times: 
                 - 2019-11-07T14:08:26.5
                 - 2019-11-07T14:08:36.05
@@ -73,7 +78,18 @@
         -
             plot_type: stack
             description: rubber hammer tap from S* to N* 
-            orientation_codes: ["3"]
+            orientation_codes: ["1"]
+            times: 
+                - 2019-11-07T14:09:16.65
+                - 2019-11-07T14:09:26.55
+                - 2019-11-07T14:09:36.5
+                - 2019-11-07T14:09:46.75
+                - 2019-11-07T14:09:56.75
+        -
+            plot_type: particle_motion
+            description: rubber hammer tap from S* to N* 
+            orientation_code_y: "1"
+            orientation_code_x: "2"
             times: 
                 - 2019-11-07T14:09:16.65
                 - 2019-11-07T14:09:26.55
@@ -84,6 +100,15 @@
             plot_type: stack
             description: rubber hammer tap from W* to E* 
             orientation_codes: ["2"]
+            times: 
+                - 2019-11-07T14:10:39.53
+                - 2019-11-07T14:10:49.35
+                - 2019-11-07T14:10:59.55
+        -
+            plot_type: particle_motion
+            description: rubber hammer tap from W* to E* 
+            orientation_code_y: "1"
+            orientation_code_x: "2"
             times: 
                 - 2019-11-07T14:10:39.53
                 - 2019-11-07T14:10:49.35
@@ -100,9 +125,33 @@
                 - 2019-11-07T14:13:39.65
                 - 2019-11-07T14:13:49.5
         -
+            plot_type: particle_motion
+            description: Jump 1m distance S* side
+            orientation_code_y: "1"
+            orientation_code_x: "2"
+            times: 
+                - 2019-11-07T14:12:59.6
+                - 2019-11-07T14:13:09.9
+                - 2019-11-07T14:13:19.45
+                - 2019-11-07T14:13:29.65
+                - 2019-11-07T14:13:39.65
+                - 2019-11-07T14:13:49.5
+        -
             plot_type: stack
             description: Jump 1m distance W* side
             orientation_codes: ["1"]
+            times: 
+                - 2019-11-07T14:15:00.1
+                - 2019-11-07T14:15:10.4
+                - 2019-11-07T14:15:20.0
+                - 2019-11-07T14:15:29.45
+                - 2019-11-07T14:15:39.7
+                - 2019-11-07T14:15:49.44
+        -
+            plot_type: particle_motion
+            description: Jump 1m distance W* side
+            orientation_code_y: "1"
+            orientation_code_x: "2"
             times: 
                 - 2019-11-07T14:15:00.1
                 - 2019-11-07T14:15:10.4
@@ -123,6 +172,18 @@
                 - 2019-11-07T14:17:40.1
                 - 2019-11-07T14:17:50.2
         -
+            plot_type: particle_motion
+            description: Hit hammer ~4m, S* side
+            orientation_code_y: "1"
+            orientation_code_x: "2"
+            times: 
+                - 2019-11-07T14:17:00.4
+                - 2019-11-07T14:17:10.2
+                - 2019-11-07T14:17:20.1
+                - 2019-11-07T14:17:29.95
+                - 2019-11-07T14:17:40.1
+                - 2019-11-07T14:17:50.2
+        -
             plot_type: stack
             description: Hit hammer ~4m, W* side
             orientation_codes: ["1"]
@@ -133,10 +194,16 @@
                 - 2019-11-07T14:19:19.5
                 - 2019-11-07T14:19:29.4
                 - 2019-11-07T14:19:39.8
-                - 2019-11-07T14:19:49.85   
+                - 2019-11-07T14:19:49.85
         -
-            plot_type: time_series
-            description: Entire time series 
-            select: {station: "*"}
-            start_time: None
-            end_time: None
+            plot_type: particle_motion
+            description: Hit hammer ~4m, W* side
+            orientation_code_y: "1"
+            orientation_code_x: "2"
+            times: 
+                - 2019-11-07T14:18:59.6
+                - 2019-11-07T14:19:09.5
+                - 2019-11-07T14:19:19.5
+                - 2019-11-07T14:19:29.4
+                - 2019-11-07T14:19:39.8
+                - 2019-11-07T14:19:49.85   
