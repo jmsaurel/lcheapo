@@ -1,209 +1,224 @@
 ---
-    datafiles:
-        - 
-            name: 20191107T14_SPOBS09_F02.raw.lch
-            obs_type: 'SPOBS2'
-            station: '09_F02'
-    description: "Tests on closed geophone"
-    globals:
-        stack:
-            offset_before: 0.5
-            offset_after:  1.5
-            plot_span: False
-        particle_motion:
-            offset_before: 0.01
-            offset_after: 0.05
-            offset_before_ts: 0.1
-            offset_after_ts: 0.2
-    tests:
-        -
-            plot_type: time_series
-            description: Entire time series 
-            select: {station: "*"}
-            start_time: None
-            end_time: None
-        -
-            plot_type: time_series
-            description: Lifting series 
-            select: {station: "*"}
-            start_time: 2019-11-07T14:01:30
-            end_time: 2019-11-07T14:07
-        -
-            plot_type: time_series
-            description: Rubber hammer taps 
-            select: {station: "*"}
-            start_time: 2019-11-07T14:08
-            end_time: 2019-11-07T14:11:10
-        -
-            plot_type: stack
-            description: Lift S* end 
-            orientation_codes: ["3"]
-            times: 
-                - 2019-11-07T14:01:58.65
-                - 2019-11-07T14:02:20.25
-                - 2019-11-07T14:02:39.9
-        -
-            plot_type: stack
-            description: Lift N* end 
-            orientation_codes: ["3"]
-            times: 
-                - 2019-11-07T14:02:59.6
-                - 2019-11-07T14:03:19.8
-                - 2019-11-07T14:03:39.9
-        -
-            plot_type: stack
-            description: Lift W* end 
-            orientation_codes: ["2"]
-            times: 
-                - 2019-11-07T14:04:59.5
-                - 2019-11-07T14:05:19.15
-                - 2019-11-07T14:05:39.7
-        -
-            plot_type: stack
-            description: Lift E* end 
-            orientation_codes: ["2","1"]
-            times: 
-                - 2019-11-07T14:05:59.55
-                - 2019-11-07T14:06:19.45
-                - 2019-11-07T14:06:39.45
-        -
-            plot_type: stack
-            description: rubber hammer tap on top 
-            orientation_codes: ["3"]
-            times: 
-                - 2019-11-07T14:08:26.5
-                - 2019-11-07T14:08:36.05
-                - 2019-11-07T14:08:45.9
-                - 2019-11-07T14:08:56.65
-        -
-            plot_type: stack
-            description: rubber hammer tap from S* to N* 
-            orientation_codes: ["1"]
-            times: 
-                - 2019-11-07T14:09:16.65
-                - 2019-11-07T14:09:26.55
-                - 2019-11-07T14:09:36.5
-                - 2019-11-07T14:09:46.75
-                - 2019-11-07T14:09:56.75
-        -
-            plot_type: particle_motion
-            description: rubber hammer tap from S* to N* 
-            orientation_code_y: "1"
-            orientation_code_x: "2"
-            times: 
-                - 2019-11-07T14:09:16.65
-                - 2019-11-07T14:09:26.55
-                - 2019-11-07T14:09:36.5
-                - 2019-11-07T14:09:46.75
-                - 2019-11-07T14:09:56.75
-        -
-            plot_type: stack
-            description: rubber hammer tap from W* to E* 
-            orientation_codes: ["2"]
-            times: 
-                - 2019-11-07T14:10:39.53
-                - 2019-11-07T14:10:49.35
-                - 2019-11-07T14:10:59.55
-        -
-            plot_type: particle_motion
-            description: rubber hammer tap from W* to E* 
-            orientation_code_y: "1"
-            orientation_code_x: "2"
-            times: 
-                - 2019-11-07T14:10:39.53
-                - 2019-11-07T14:10:49.35
-                - 2019-11-07T14:10:59.55
-        -
-            plot_type: stack
-            description: Jump 1m distance S* side
-            orientation_codes: ["1"]
-            times: 
-                - 2019-11-07T14:12:59.6
-                - 2019-11-07T14:13:09.9
-                - 2019-11-07T14:13:19.45
-                - 2019-11-07T14:13:29.65
-                - 2019-11-07T14:13:39.65
-                - 2019-11-07T14:13:49.5
-        -
-            plot_type: particle_motion
-            description: Jump 1m distance S* side
-            orientation_code_y: "1"
-            orientation_code_x: "2"
-            times: 
-                - 2019-11-07T14:12:59.6
-                - 2019-11-07T14:13:09.9
-                - 2019-11-07T14:13:19.45
-                - 2019-11-07T14:13:29.65
-                - 2019-11-07T14:13:39.65
-                - 2019-11-07T14:13:49.5
-        -
-            plot_type: stack
-            description: Jump 1m distance W* side
-            orientation_codes: ["1"]
-            times: 
-                - 2019-11-07T14:15:00.1
-                - 2019-11-07T14:15:10.4
-                - 2019-11-07T14:15:20.0
-                - 2019-11-07T14:15:29.45
-                - 2019-11-07T14:15:39.7
-                - 2019-11-07T14:15:49.44
-        -
-            plot_type: particle_motion
-            description: Jump 1m distance W* side
-            orientation_code_y: "1"
-            orientation_code_x: "2"
-            times: 
-                - 2019-11-07T14:15:00.1
-                - 2019-11-07T14:15:10.4
-                - 2019-11-07T14:15:20.0
-                - 2019-11-07T14:15:29.45
-                - 2019-11-07T14:15:39.7
-                - 2019-11-07T14:15:49.44
-        -
-            plot_type: stack
-            description: Hit hammer ~4m, S* side
-            orientation_codes: ["1"]
-            offset_after: 0.5
-            times: 
-                - 2019-11-07T14:17:00.4
-                - 2019-11-07T14:17:10.2
-                - 2019-11-07T14:17:20.1
-                - 2019-11-07T14:17:29.95
-                - 2019-11-07T14:17:40.1
-                - 2019-11-07T14:17:50.2
-        -
-            plot_type: particle_motion
-            description: Hit hammer ~4m, S* side
-            orientation_code_y: "1"
-            orientation_code_x: "2"
-            times: 
-                - 2019-11-07T14:17:00.4
-                - 2019-11-07T14:17:10.2
-                - 2019-11-07T14:17:20.1
-                - 2019-11-07T14:17:29.95
-                - 2019-11-07T14:17:40.1
-                - 2019-11-07T14:17:50.2
-        -
-            plot_type: stack
-            description: Hit hammer ~4m, W* side
-            orientation_codes: ["1"]
-            offset_after: 0.5
-            times: 
-                - 2019-11-07T14:18:59.6
-                - 2019-11-07T14:19:09.5
-                - 2019-11-07T14:19:19.5
-                - 2019-11-07T14:19:29.4
-                - 2019-11-07T14:19:39.8
-                - 2019-11-07T14:19:49.85
-        -
-            plot_type: particle_motion
-            description: Hit hammer ~4m, W* side
-            orientation_code_y: "1"
-            orientation_code_x: "2"
-            times: 
-                - 2019-11-07T14:18:59.6
-                - 2019-11-07T14:19:09.5
-                - 2019-11-07T14:19:19.5
-                - 2019-11-07T14:19:29.4
-                - 2019-11-07T14:19:39.8
-                - 2019-11-07T14:19:49.85   
+    input:
+        starttime: null
+        endtime: null
+        datafiles:
+            - 
+                name: 20191107T14_SPOBS09_F02.raw.lch
+                obs_type: 'SPOBS2'
+                station: '09_F02'
+        description: "Tests on closed geophone"
+    output:
+        show: True
+        filebase: null
+    plots:
+        globals:
+            stack:
+                offset_before: 0.5
+                offset_after:  1.5
+                plot_span: False
+            particle_motion:
+                offset_before: 0.00
+                offset_after: 0.03
+                offset_before_ts: 0.1
+                offset_after_ts: 0.2
+            spectra:
+                window_length_s: 8192
+        list:
+            -
+                plot_type: time_series
+                description: Entire time series 
+                select: {station: "*"}
+                start_time: null
+                end_time: null
+            -
+                plot_type: spectra
+                description: Entire time series 
+                select: {station: "*"}
+                start_time: null
+                end_time: null
+            -
+                plot_type: time_series
+                description: Lifting series 
+                select: {station: "*"}
+                start_time: 2019-11-07T14:01:30
+                end_time: 2019-11-07T14:07
+            -
+                plot_type: time_series
+                description: Rubber hammer taps 
+                select: {station: "*"}
+                start_time: 2019-11-07T14:08
+                end_time: 2019-11-07T14:11:10
+            -
+                plot_type: stack
+                description: Lift S* end 
+                orientation_codes: ["3"]
+                times: 
+                    - 2019-11-07T14:01:58.65
+                    - 2019-11-07T14:02:20.25
+                    - 2019-11-07T14:02:39.9
+            -
+                plot_type: stack
+                description: Lift N* end 
+                orientation_codes: ["3"]
+                times: 
+                    - 2019-11-07T14:02:59.6
+                    - 2019-11-07T14:03:19.8
+                    - 2019-11-07T14:03:39.9
+            -
+                plot_type: stack
+                description: Lift W* end 
+                orientation_codes: ["2"]
+                times: 
+                    - 2019-11-07T14:04:59.5
+                    - 2019-11-07T14:05:19.15
+                    - 2019-11-07T14:05:39.7
+            -
+                plot_type: stack
+                description: Lift E* end 
+                orientation_codes: ["2","1"]
+                times: 
+                    - 2019-11-07T14:05:59.55
+                    - 2019-11-07T14:06:19.45
+                    - 2019-11-07T14:06:39.45
+            -
+                plot_type: stack
+                description: rubber hammer tap on top 
+                orientation_codes: ["3"]
+                times: 
+                    - 2019-11-07T14:08:26.5
+                    - 2019-11-07T14:08:36.05
+                    - 2019-11-07T14:08:45.9
+                    - 2019-11-07T14:08:56.65
+            -
+                plot_type: stack
+                description: rubber hammer tap from S* to N* 
+                orientation_codes: ["1"]
+                times: 
+                    - 2019-11-07T14:09:16.65
+                    - 2019-11-07T14:09:26.55
+                    - 2019-11-07T14:09:36.5
+                    - 2019-11-07T14:09:46.75
+                    - 2019-11-07T14:09:56.75
+            -
+                plot_type: particle_motion
+                description: rubber hammer tap from S* to N* 
+                orientation_code_y: "1"
+                orientation_code_x: "2"
+                times: 
+                    - 2019-11-07T14:09:16.65
+                    - 2019-11-07T14:09:26.55
+                    - 2019-11-07T14:09:36.5
+                    - 2019-11-07T14:09:46.75
+                    - 2019-11-07T14:09:56.75
+            -
+                plot_type: stack
+                description: rubber hammer tap from W* to E* 
+                orientation_codes: ["2"]
+                times: 
+                    - 2019-11-07T14:10:39.53
+                    - 2019-11-07T14:10:49.35
+                    - 2019-11-07T14:10:59.55
+            -
+                plot_type: particle_motion
+                description: rubber hammer tap from W* to E* 
+                orientation_code_y: "1"
+                orientation_code_x: "2"
+                times: 
+                    - 2019-11-07T14:10:39.53
+                    - 2019-11-07T14:10:49.35
+                    - 2019-11-07T14:10:59.55
+            -
+                plot_type: stack
+                description: Jump 1m distance S* side
+                orientation_codes: ["1"]
+                times: 
+                    - 2019-11-07T14:12:59.6
+                    - 2019-11-07T14:13:09.9
+                    - 2019-11-07T14:13:19.45
+                    - 2019-11-07T14:13:29.65
+                    - 2019-11-07T14:13:39.65
+                    - 2019-11-07T14:13:49.5
+            -
+                plot_type: particle_motion
+                description: Jump 1m distance S* side
+                orientation_code_y: "1"
+                orientation_code_x: "2"
+                times: 
+                    - 2019-11-07T14:12:59.6
+                    - 2019-11-07T14:13:09.9
+                    - 2019-11-07T14:13:19.45
+                    - 2019-11-07T14:13:29.65
+                    - 2019-11-07T14:13:39.65
+                    - 2019-11-07T14:13:49.5
+            -
+                plot_type: stack
+                description: Jump 1m distance W* side
+                orientation_codes: ["1"]
+                times: 
+                    - 2019-11-07T14:15:00.1
+                    - 2019-11-07T14:15:10.4
+                    - 2019-11-07T14:15:20.0
+                    - 2019-11-07T14:15:29.45
+                    - 2019-11-07T14:15:39.7
+                    - 2019-11-07T14:15:49.44
+            -
+                plot_type: particle_motion
+                description: Jump 1m distance W* side
+                orientation_code_y: "1"
+                orientation_code_x: "2"
+                times: 
+                    - 2019-11-07T14:15:00.1
+                    - 2019-11-07T14:15:10.4
+                    - 2019-11-07T14:15:20.0
+                    - 2019-11-07T14:15:29.45
+                    - 2019-11-07T14:15:39.7
+                    - 2019-11-07T14:15:49.44
+            -
+                plot_type: stack
+                description: Hit hammer ~4m, S* side
+                orientation_codes: ["1"]
+                offset_after: 0.5
+                times: 
+                    - 2019-11-07T14:17:00.4
+                    - 2019-11-07T14:17:10.2
+                    - 2019-11-07T14:17:20.1
+                    - 2019-11-07T14:17:29.95
+                    - 2019-11-07T14:17:40.1
+                    - 2019-11-07T14:17:50.2
+            -
+                plot_type: particle_motion
+                description: Hit hammer ~4m, S* side
+                orientation_code_y: "1"
+                orientation_code_x: "2"
+                times: 
+                    - 2019-11-07T14:17:00.4
+                    - 2019-11-07T14:17:10.2
+                    - 2019-11-07T14:17:20.1
+                    - 2019-11-07T14:17:29.95
+                    - 2019-11-07T14:17:40.1
+                    - 2019-11-07T14:17:50.2
+            -
+                plot_type: stack
+                description: Hit hammer ~4m, W* side
+                orientation_codes: ["1"]
+                offset_after: 0.5
+                times: 
+                    - 2019-11-07T14:18:59.6
+                    - 2019-11-07T14:19:09.5
+                    - 2019-11-07T14:19:19.5
+                    - 2019-11-07T14:19:29.4
+                    - 2019-11-07T14:19:39.8
+                    - 2019-11-07T14:19:49.85
+            -
+                plot_type: particle_motion
+                description: Hit hammer ~4m, W* side
+                orientation_code_y: "1"
+                orientation_code_x: "2"
+                times: 
+                    - 2019-11-07T14:18:59.6
+                    - 2019-11-07T14:19:09.5
+                    - 2019-11-07T14:19:19.5
+                    - 2019-11-07T14:19:29.4
+                    - 2019-11-07T14:19:39.8
+                    - 2019-11-07T14:19:49.85   

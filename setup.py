@@ -12,7 +12,7 @@ setuptools.setup(
     version=version['__version__'],
     author="Wayne Crawford",
     author_email="crawford@ipgp.fr",
-    description="LCHEAPO data reading",
+    description="LCHEAPO data reading and plotting",
     long_description=long_description,
     long_description_content_type="text/x-rst; charset=UTF-8",
     url="https://github.com/WayneCrawford/lcheapo_obspy",
@@ -20,12 +20,17 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
           'obspy>=1.1',
-          'lcheapo>=0.7'
+          'lcheapo>=0.7',
+          'numpy>=1.17',
+          'scipy>=1.3',
+          'matplotlib>3.0',
+          'PyYAML>3.0'
       ],
     entry_points={
          'console_scripts': [
              'lcplot=lcheapo_obspy.lc_read:_plot_command',
-             'lc2ms_w=lcheapo_obspy.lc_read:_to_mseed_command'
+             'lc2ms_w=lcheapo_obspy.lc_read:_to_mseed_command',
+             'lctest=lcheapo_obspy.lctest:main'
          ]
     },
     python_requires='>=3.6',

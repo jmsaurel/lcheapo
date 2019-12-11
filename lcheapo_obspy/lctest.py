@@ -8,11 +8,14 @@ Plots:
     - spectra from  multiple stations/channels
     - particle_motions between two channels
 """
-from lc_read import read
+from .lc_read import read
+from .spectral import PSDs
 from obspy.core import UTCDateTime, Stream
 from obspy.signal import PPSD
+import numpy as np
 import yaml
 import sys
+import re
 import argparse
 from matplotlib import pyplot as plt
 
@@ -23,88 +26,79 @@ def main():
     """
     args = get_arguments()
     root = read_lctest_yaml(args.yaml_file)
-    stack_offset_before, stack_offset_after, stack_plot_span = get_globals(root)
-    stream = read_files(root['datafiles'])
-    for test in root['tests']:
-        plot_type = test['plot_type']
+    plot_globals = get_plot_globals(root)
+    stream = read_files(root['input'])
+    show = root['output']['show']
+    filebase = root['output']['filebase']
+    for plot in root['plots']['list']:
+        plot_type = plot['plot_type']
         if plot_type == 'time_series':
-            try :
-                starttime = UTCDateTime(test['start_time'])
-            except:
-                starttime = None
-            try :
-                endtime = UTCDateTime(test['end_time'])
-            except:
-                endtime = None
-            plot_time_series(stream, starttime, endtime, test['select'],
-                             description=test['description'])
+            plot_time_series(stream,
+                             _UTCDateTimeorNone(plot['start_time']),
+                             _UTCDateTimeorNone(plot['end_time']),
+                             plot['select'],
+                             description=plot['description'],
+                             filebase=filebase,
+                             show=show)
         elif plot_type == 'stack':
-            for o_code in test['orientation_codes']:
+            globs = plot_globals['stack']
+            for o_code in plot['orientation_codes']:
                 trace = stream.select(component=o_code)[0]
-                plot_stack(trace,
-                           [UTCDateTime(t) for t in test['times']],
-                           test['description'],
-                           offset_before=test.get('offset_before',
-                                                  stack_offset_before),
-                           offset_after=test.get('offset_after',
-                                                 stack_offset_after),
-                           plot_span=test.get('plot_span',stack_plot_span))
+                plot_stack(
+                    trace,
+                    [UTCDateTime(t) for t in plot['times']],
+                    plot['description'],
+                    offset_before=_get_val('offset_before', plot, globs),
+                    offset_after=_get_val('offset_after', plot, globs),
+                    plot_span=_get_val('plot_span', plot, globs),
+                    filebase=filebase,
+                    show=show)
         elif plot_type == 'spectra':
-            print('NOT YET IMPLEMENTED')
+            spect = calc_spect(stream, plot,
+                               plot_globals.get('spectra', None))
+            spect.plot()
             # inv = read_inventory(arguments.sta_file)
         elif plot_type == 'particle_motion':
-            print('NOT YET IMPLEMENTED')
+            tracex = stream.select(component=plot['orientation_code_x'])[0]
+            tracey = stream.select(component=plot['orientation_code_y'])[0]
+            globs = plot_globals['particle_motion']
+            plot_particle_motion(
+                tracex, tracey, [UTCDateTime(t) for t in plot['times']],
+                plot['description'],
+                offset_before=_get_val('offset_before', plot, globs),
+                offset_after=_get_val('offset_after', plot, globs),
+                offset_before_ts=_get_val('offset_before_ts', plot, globs),
+                offset_after_ts=_get_val('offset_after_ts', plot, globs),
+                plot_span=_get_val('plot_span', plot, globs),
+                filebase=filebase,
+                show=show)
         else:
             print(f'UNKNOWN PLOT TYPE "{plot_type}", skipping...')
 
 
-def get_globals(root):
+def calc_spect(stream, plot_parms, glob_parms=None):
     """
-    Return global values
-    
-    For now, just offset_before and offset_after
+    Calculate spectra for in_stream
     """
-    offset_before, offset_after = None, None
-    plot_span = False
-    if 'globals' in root:
-        if 'stack' in root['globals']:
-            offset_before = root['globals']['stack'].get('offset_before', None)
-            offset_after = root['globals']['stack'].get('offset_after', None)
-            plot_span = root['globals']['stack'].get('plot_span', False)
-    return offset_before, offset_after, plot_span
-
-
-def read_files(datafile_list):
-    """
-    Read in data from one or more datafiles
-
-    datafile_list: list of dict(name=, obs_type=, station=)
-    """
-    stream = Stream()
-    for df in datafile_list:
-        s = read(df['name'], chan_map=df['obs_type'])
-        for t in s:
-            t.stats.station = df['station']
-        stream += s
-    return stream
-
-
-def get_arguments():
-    """
-    Get command line arguments
-    """
-    p = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument('yaml_file', help='YAML parameter file')
-    p.add_argument("-v", "--verbose", default=False, action='store_true',
-                   help="verbose")
-    p.add_argument("--inv_file", help="inventory file")
-    return p.parse_args()
+    # Select appropriate channels
+    if plot_parms['select']:
+        stream.select(**plot_parms['select'])
+    starttime = _UTCDateTimeorNone(plot_parms['start_time'])
+    endtime = _UTCDateTimeorNone(plot_parms['end_time'])
+    if starttime or endtime:
+        stream = stream.slice(starttime=starttime, endtime=endtime)
+    # Calculate spectra
+    wl = _get_val('window_length_s', plot_parms, glob_parms)
+    if wl:
+        spect = PSDs.calc(stream, window_length=wl)
+    else:
+        spect = PSDs.calc(stream)
+    return spect
 
 
 def plot_time_series(in_stream, starttime=None, endtime=None,
-                     selectargs=None, description=None, filebase=None):
+                     selectargs=None, description=None, filebase=None,
+                     show=True):
     """
     Plot a time series
 
@@ -120,16 +114,22 @@ def plot_time_series(in_stream, starttime=None, endtime=None,
         stream.select(**selectargs)
     outfile = None
     if filebase:
-        outfile = filebase + '.png'
+        outfile = filebase
 
-    fig=plt.figure()
+    fig = plt.figure()
     fig.suptitle(description)
-    stream.plot(size=(800, 600), outfile=outfile, fig=fig)
-    plt.show()
+
+    outfile = False
+    if filebase:
+        outfile = filebase + '_' + get_valid_filename(description) + '_ts.png'
+        stream.plot(size=(800, 600), fig=fig, outfile=outfile)
+    if show:
+        stream.plot(size=(800, 600), fig=fig)
+        plt.show()
 
 
-def plot_stack(trace, times, description, outfile=None,
-               offset_before=0.5, offset_after=1.5, plot_span=False):
+def plot_stack(trace, times, description, offset_before=0.5, offset_after=1.5,
+               plot_span=False, filebase=None, show=True):
     """
     Plot a stack of time series from one trace
 
@@ -141,51 +141,100 @@ def plot_stack(trace, times, description, outfile=None,
     """
     title = description + f', orientation_code="{trace.stats.channel[-1]}"'
     if plot_span:
-        first = min(times)
-        last = max(times)
-        span = last-first
-        trace.slice(first-span/2,last+span/2).plot()
+        _plot_span(times, Stream(traces=[trace]))
     print(f'Plotting stack "{title}"')
-    colors = 'rbgmcyk'  # should be more intelligent about color cycling
-    i = 0               # then won't need "i"
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(times)))
     offset_vertical = 0
     # time_zero = UTCDateTime(times[0])
     ax = plt.axes()
     max_val = 0
+    # Set up y axis range
     for time in times:
-        temp=trace.slice(time - offset_before, time + offset_after)
+        temp = trace.slice(time - offset_before, time + offset_after)
         if abs(temp.max()) > max_val:
             max_val = abs(temp.max())
-    for time in times:
+    # Plot the subtraces
+    for time, c in zip(times, colors):
         offset_vertical += max_val
         t = trace.slice(time - offset_before, time + offset_after)
         ax.plot(t.times("utcdatetime") - time,
-                t.data - offset_vertical,
-                colors[i % len(colors)],
+                t.data - offset_vertical, color=c,
                 label=time.strftime('%H:%M:%S') +
                 '.{:02d}'.format(int(time.microsecond / 1e4)))
         offset_vertical += max_val
-        i += 1
     ax.set_title(title)
     ax.grid()
     ax.legend()
-    if outfile:
-        plt.savefig(outfile)
-    else:
+    if show:
         plt.show()
+    if filebase:
+        plt.savefig(filebase + '_' + get_valid_filename(description) +
+                    '_stack.png')
 
 
-def read_lctest_yaml(filename='_examples/events_secondtest.yaml'):
+def plot_particle_motion(tracex, tracey, times, description,
+                         offset_before=0.0, offset_after=0.5,
+                         offset_before_ts=0.5, offset_after_ts=1.5,
+                         plot_span=False, filebase=None, show=True):
     """
-    Verify and read in an lctest yaml file
+    Plot particle motions
+
+    tracex is an obspy Stream object to plot on x axis
+    tracey is an obspy Stream object to plot on y axis
+    title is the title to put on the graph
+    outfile is the filename to write the plot out to (None = print to screen)
+    times is a list of UTCDateTimes
+    offset_before, offset_after: seconds before and after "time" to plot
+    offset_before_ts, offset_after_st: seconds before and after "time"
+                                       to plot as time series
+    plot_span: whether to plot a time series spanning the first to last time
     """
-    print('VERIFY LCTEST.YAML NOT YET IMPLEMENTED!')
-    with open(filename) as f:
-        root = yaml.safe_load(f)
-    return root
+    tx_comp = tracex.stats.channel[-1]
+    ty_comp = tracey.stats.channel[-1]
+    title = description + f', compare "{tx_comp}" to "{ty_comp}"'
+    if plot_span:
+        _plot_span(times, Stream(traces=[tracex, tracey]))
+    print(f'Plotting particle motion "{title}"')
+    # Setup axis grid
+    fig = plt.figure()
+    gs = fig.add_gridspec(2, 3, hspace=0, wspace=0)
+    # two columns, one row:
+    axx = fig.add_subplot(gs[0, :2])
+    axy = fig.add_subplot(gs[1, :2], sharex=axx, sharey=axx)
+    # one column, one row
+    axxy = fig.add_subplot(gs[1, 2], sharey=axy)
+    for time in times:
+        # time series plots
+        tx = tracex.slice(time - offset_before_ts, time + offset_after_ts)
+        ty = tracey.slice(time - offset_before_ts, time + offset_after_ts)
+        axx.plot(tx.times("utcdatetime") - time, tx.data)
+        axx.axvline(offset_before)
+        axx.axvline(offset_after)
+        axx.set_ylabel(tx_comp)
+        axy.plot(ty.times("utcdatetime") - time, ty.data)
+        axy.axvline(offset_before)
+        axy.axvline(offset_after)
+        axx.set_ylabel(ty_comp)
+
+        # partical motion plot
+        tx = tracex.slice(time - offset_before, time + offset_after)
+        ty = tracey.slice(time - offset_before, time + offset_after)
+        axxy.plot(tx.data, ty.data)
+        axxy.axvline(0)
+        axxy.axhline(0)
+        axxy.set_aspect('equal', 'datalim')
+        axxy.set_xlabel(tx_comp)
+        # axxy.set_yticklabels([])
+    fig.suptitle(title)
+    if show:
+        plt.show()
+    if filebase:
+        plt.savefig(filebase + '_' + get_valid_filename(description) +
+                    '_pm.png')
 
 
-def plot_PPSD(trace, sta, start_time, interval=7200):
+def plot_PPSD(trace, sta, start_time, interval=7200, filebase=None,
+              show=True):
     """
     Plot a Probabilistic Power Spectral Desnsity for the trace
 
@@ -207,15 +256,123 @@ def plot_PPSD(trace, sta, start_time, interval=7200):
         ppsd.add(trace)
         now_time += interval
 
-    filebase = '{}.{}.{}.{}'.format(trace.stats.network_code,
-                                    trace.stats.station,
-                                    trace.stats.location_code,
-                                    trace.stats.component)
     ppsd.save_npz(f'{filebase}_PPSD.npz')
-    ppsd.plot(f'{filebase}_PPSD.png')
+    if show:
+        plt.plot()
+    if filebase:
+        description = '{}.{}.{}.{}'.format(trace.stats.network,
+                                           trace.stats.station,
+                                           trace.stats.location,
+                                           trace.stats.channel)
+        ppsd.plot(filebase + '_' + description
+                  + '_PPSD.png')
     # ppsd.plot_temporal([0.1,1,10])
     # ppsd.plot_spectrogram()
     return 0
+
+
+def _UTCDateTimeorNone(input):
+    """
+    Converts input string to UTCDateTime or None if it doesn't work
+    """
+    try:
+        return UTCDateTime(input)
+    except TypeError:
+        return None
+
+
+def _get_val(key, dict1, dict2):
+    """
+    Returns key value from dict1 or dict2
+
+    If it's in dict1, returns from dict1,
+    If it's not in dict1 but in dict2, returns from dict2
+    If it's in neither, returns False
+    """
+    if key in dict1:
+        return dict1[key]
+    elif dict2:
+        if key in dict2:
+            return dict2[key]
+    return False
+
+
+def get_plot_globals(root):
+    """
+    Return global plot values
+
+    For now, just offset_before and offset_after
+    """
+    globals = {'stack': {'offset_before': False,
+                         'offset_after': False,
+                         'plot_span': False},
+               'particle_motion': {'offset_before': False,
+                                   'offset_after': False,
+                                   'offset_before_ts': False,
+                                   'offset_after_ts': False,
+                                   'plot_span': False}}
+    if 'globals' in root['plots']:
+        plot_globals = root['plots']['globals']
+        for type in globals:
+            if type in plot_globals:
+                for parm in globals[type]:
+                    if parm in plot_globals[type]:
+                        globals[type][parm] = plot_globals[type][parm]
+    return globals
+
+
+def read_files(inputs):
+    """
+    Read in data from one or more datafiles
+
+    datafile_list: list of dict(name=, obs_type=, station=)
+    """
+    stream = Stream()
+    for df in inputs['datafiles']:
+        s = read(df['name'],
+                 starttime=inputs.get('starttime', False),
+                 endtime=inputs.get('endtime', False),
+                 chan_map=df['obs_type'])
+        for t in s:
+            t.stats.station = df['station']
+        stream += s
+    return stream
+
+
+def get_arguments():
+    """
+    Get command line arguments
+    """
+    p = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument('yaml_file', help='YAML parameter file')
+    p.add_argument("-v", "--verbose", default=False, action='store_true',
+                   help="verbose")
+    p.add_argument("--inv_file", help="inventory file")
+    return p.parse_args()
+
+
+def get_valid_filename(s):
+    s = str(s).strip().replace(' ', '_')
+    return re.sub(r'(?u)[^-\w.]', '', s)
+
+
+def _plot_span(times, stream):
+    first = min(times)
+    last = max(times)
+    span = last-first
+    stream.slice(first - span / 2, last + span / 2).plot()
+
+
+def read_lctest_yaml(filename='_examples/events_secondtest.yaml'):
+    """
+    Verify and read in an lctest yaml file
+    """
+    print('VERIFY LCTEST.YAML NOT YET IMPLEMENTED!')
+    with open(filename) as f:
+        root = yaml.safe_load(f)
+    return root
 
 
 if __name__ == '__main__':
