@@ -30,9 +30,8 @@ def main():
     stream = read_files(root['input'])
     show = root['output']['show']
     filebase = root['output']['filebase']
-    for plot in root['plots']['list']:
-        plot_type = plot['plot_type']
-        if plot_type == 'time_series':
+    if 'time_series' in root['plots']:
+        for plot in root['plots']['time_series']:
             plot_time_series(stream,
                              _UTCDateTimeorNone(plot['start_time']),
                              _UTCDateTimeorNone(plot['end_time']),
@@ -40,7 +39,8 @@ def main():
                              description=plot['description'],
                              filebase=filebase,
                              show=show)
-        elif plot_type == 'stack':
+    if 'stack' in root['plots']:
+        for plot in root['plots']['stack']:
             globs = plot_globals['stack']
             for o_code in plot['orientation_codes']:
                 trace = stream.select(component=o_code)[0]
@@ -53,12 +53,15 @@ def main():
                     plot_span=_get_val('plot_span', plot, globs),
                     filebase=filebase,
                     show=show)
-        elif plot_type == 'spectra':
-            spect = calc_spect(stream, plot,
+    if 'spectra' in root['plots']:
+        for plot in root['plots']['spectra']:
+            spect = calc_spect(stream,
+                               plot,
                                plot_globals.get('spectra', None))
             spect.plot()
             # inv = read_inventory(arguments.sta_file)
-        elif plot_type == 'particle_motion':
+    if 'particle_motion' in root['plots']:
+        for plot in root['plots']['particle_motion']:
             tracex = stream.select(component=plot['orientation_code_x'])[0]
             tracey = stream.select(component=plot['orientation_code_y'])[0]
             globs = plot_globals['particle_motion']
@@ -72,8 +75,6 @@ def main():
                 plot_span=_get_val('plot_span', plot, globs),
                 filebase=filebase,
                 show=show)
-        else:
-            print(f'UNKNOWN PLOT TYPE "{plot_type}", skipping...')
 
 
 def calc_spect(stream, plot_parms, glob_parms=None):
@@ -82,13 +83,15 @@ def calc_spect(stream, plot_parms, glob_parms=None):
     """
     # Select appropriate channels
     if plot_parms['select']:
-        stream.select(**plot_parms['select'])
+        stream = stream.select(**plot_parms['select'])
     starttime = _UTCDateTimeorNone(plot_parms['start_time'])
     endtime = _UTCDateTimeorNone(plot_parms['end_time'])
     if starttime or endtime:
         stream = stream.slice(starttime=starttime, endtime=endtime)
     # Calculate spectra
+    print(plot_parms, glob_parms)
     wl = _get_val('window_length_s', plot_parms, glob_parms)
+    print(stream, wl)
     if wl:
         spect = PSDs.calc(stream, window_length=wl)
     else:
@@ -111,7 +114,7 @@ def plot_time_series(in_stream, starttime=None, endtime=None,
     print(f'Plotting time series "{description}"')
     stream = in_stream.slice(starttime=starttime, endtime=endtime)
     if selectargs:
-        stream.select(**selectargs)
+        stream = stream.select(**selectargs)
     outfile = None
     if filebase:
         outfile = filebase
@@ -140,6 +143,8 @@ def plot_stack(trace, times, description, offset_before=0.5, offset_after=1.5,
     plot_span: whether to plot a time series spanning the first to last time
     """
     title = description + f', orientation_code="{trace.stats.channel[-1]}"'
+    assert offset_before >= 0, f'offset_before < 0 ({offset_before:g})'
+    assert offset_after > 0, f'offset_after <= 0 ({offset_after:g})'
     if plot_span:
         _plot_span(times, Stream(traces=[trace]))
     print(f'Plotting stack "{title}"')
@@ -149,8 +154,10 @@ def plot_stack(trace, times, description, offset_before=0.5, offset_after=1.5,
     ax = plt.axes()
     max_val = 0
     # Set up y axis range
+    print(trace)
     for time in times:
         temp = trace.slice(time - offset_before, time + offset_after)
+        print(temp)
         if abs(temp.max()) > max_val:
             max_val = abs(temp.max())
     # Plot the subtraces
@@ -311,8 +318,8 @@ def get_plot_globals(root):
                                    'offset_before_ts': False,
                                    'offset_after_ts': False,
                                    'plot_span': False}}
-    if 'globals' in root['plots']:
-        plot_globals = root['plots']['globals']
+    if 'plot_globals' in root:
+        plot_globals = root['plot_globals']
         for type in globals:
             if type in plot_globals:
                 for parm in globals[type]:

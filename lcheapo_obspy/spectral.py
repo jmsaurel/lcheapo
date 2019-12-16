@@ -59,6 +59,9 @@ class PSD:
         assert type(tr) == Trace
         
         sampling_rate = tr.stats.sampling_rate
+        data_len = tr.stats.endtime - tr.stats.starttime
+        if window_length > data_len/2:
+            window_length = int(data_len/3)
         nfft = 2**(m.ceil(m.log2(window_length * sampling_rate)))
         nlap = int(0.75 * nfft)
 
@@ -123,7 +126,6 @@ class PSD:
         else:
             plt.figure()
             ax = plt.gca()
-        print(self.freqs, self.data, self.units)
         ax.semilogx(self.freqs, 10 * np.log10(self.data))
         ax.set_ylabel(self.units)
         # ax.title()

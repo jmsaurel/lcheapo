@@ -6,6 +6,7 @@ TO DO
     - Specify which channels to plot for each file (select parameters)
 - lctest
     - Schema and validator for YAML file
+    - Add integration of data/LCHEAPO.station.xml transfer functions
 - lcfix
     - Allow header file
     - Make main code more modular (more functions/subroutines) for clarity
