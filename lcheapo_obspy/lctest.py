@@ -55,10 +55,14 @@ def main():
                     show=show)
     if 'spectra' in root['plots']:
         for plot in root['plots']['spectra']:
-            spect = calc_spect(stream,
-                               plot,
+            spect = calc_spect(stream, plot,
                                plot_globals.get('spectra', None))
-            spect.plot()
+            if filebase:
+                spect.plot(outfile=filebase + '_'
+                                   + get_valid_filename(plot['description'])
+                                   + '_spect.png')
+            if show:
+                spect.plot()
             # inv = read_inventory(arguments.sta_file)
     if 'particle_motion' in root['plots']:
         for plot in root['plots']['particle_motion']:
@@ -172,11 +176,11 @@ def plot_stack(trace, times, description, offset_before=0.5, offset_after=1.5,
     ax.set_title(title)
     ax.grid()
     ax.legend()
-    if show:
-        plt.show()
     if filebase:
         plt.savefig(filebase + '_' + get_valid_filename(description) +
                     '_stack.png')
+    if show:
+        plt.show()
 
 
 def plot_particle_motion(tracex, tracey, times, description,
@@ -233,11 +237,11 @@ def plot_particle_motion(tracex, tracey, times, description,
         axxy.set_xlabel(tx_comp)
         # axxy.set_yticklabels([])
     fig.suptitle(title)
-    if show:
-        plt.show()
     if filebase:
         plt.savefig(filebase + '_' + get_valid_filename(description) +
                     '_pm.png')
+    if show:
+        plt.show()
 
 
 def plot_PPSD(trace, sta, start_time, interval=7200, filebase=None,
@@ -264,8 +268,6 @@ def plot_PPSD(trace, sta, start_time, interval=7200, filebase=None,
         now_time += interval
 
     ppsd.save_npz(f'{filebase}_PPSD.npz')
-    if show:
-        plt.plot()
     if filebase:
         description = '{}.{}.{}.{}'.format(trace.stats.network,
                                            trace.stats.station,
@@ -273,6 +275,8 @@ def plot_PPSD(trace, sta, start_time, interval=7200, filebase=None,
                                            trace.stats.channel)
         ppsd.plot(filebase + '_' + description
                   + '_PPSD.png')
+    if show:
+        plt.plot()
     # ppsd.plot_temporal([0.1,1,10])
     # ppsd.plot_spectrogram()
     return 0

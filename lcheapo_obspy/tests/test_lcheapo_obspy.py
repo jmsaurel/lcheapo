@@ -68,122 +68,122 @@ class TestLCHEAPOMethods(unittest.TestCase):
         """ Compares two binary files """
         self.assertTrue(filecmp.cmp(first, second))
 
-    def test_dump(self):
-        """
-        Test lcdump outputs.
-        """
-        # WRITEOUT OF DATA HEADERS
-        cmd = os.path.join(self.exec_path, 'lcdump.py') + ' ' +\
-            os.path.join(self.testing_path, 'BUGGY.raw.lch') +\
-            ' 5000 100  > temp_test.out'
-        os.system(cmd)
-        self.assertTextFilesEqual(
-            'temp_test.out',
-            os.path.join(self.testing_path, 'BUGGY_lcdump_5000_100.txt')
-            )
-        os.remove('temp_test.out')
-
-        # WRITEOUT OF FILE HEADER
-
-        # WRITEOUT OF DIRECTORY
-
-    def test_fix_buggy(self):
-        """
-        Test lcfix on a typical (buggy) file
-        """
-        # Run the code
-        cmd = os.path.join(self.exec_path, 'lcfix.py') + \
-            ' -d ' + self.path + ' -i data BUGGY.raw.lch > temp'
-        os.system(cmd)
-        os.remove('temp')
-        # print(os.listdir('.'))
-
-        # Check that the appropriate files were created
-        assert not os.path.exists('BUGGY.fix.timetears.txt')
-
-        # Compare binary files (fix.lch)
-        outfname = 'BUGGY.fix.lch'
-        assert os.path.exists(outfname)
-        self.assertBinFilesEqual(
-            outfname,
-            os.path.join(self.testing_path, outfname))
-        os.remove(outfname)
-
-        # Compare text files (fix.txt)
-        outfname = 'BUGGY.fix.txt'
-        assert os.path.exists(outfname)
-        self.assertTextFilesEqual(
-            outfname,
-            os.path.join(self.testing_path, outfname))
-        os.remove(outfname)
-
-        # Compare text files (process-steps.json)
-        outfname = 'process-steps.json'
-        assert os.path.exists(outfname)
-        new_outfname = 'BUGGY.' + outfname
-        os.rename(outfname, new_outfname)
-        self.assertProcessStepsFilesEqual(
-            new_outfname,
-            os.path.join(self.testing_path, new_outfname))
-        os.remove(new_outfname)
-
-    def test_fix_bad(self):
-        """
-        Test lcfix on a bad (full of time tears) file
-        """
-        # Run the code
-        cmd = os.path.join(self.exec_path, 'lcfix.py') + \
-            ' -d ' + self.path + ' -i data BAD.bad.lch > temp'
-        os.system(cmd)
-        os.remove('temp')
-
-        # Confirm that no lch file was created
-        assert not os.path.exists('BAD.fix.lch')
-
-        # Compare text files (fix.txt)
-        outfname = 'BAD.fix.txt'
-        assert os.path.exists(outfname)
-        self.assertTextFilesEqual(
-            outfname,
-            os.path.join(self.testing_path, outfname))
-        os.remove(outfname)
-
-        # Compare text files (fix.timetears.txt)
-        outfname = 'BAD.fix.timetears.txt'
-        assert os.path.exists(outfname)
-        self.assertTextFilesEqual(
-            outfname,
-            os.path.join(self.testing_path, outfname))
-        os.remove(outfname)
-
-        # Compare process-steps files
-        outfname = 'process-steps.json'
-        assert os.path.exists(outfname)
-        new_outfname = 'BAD.' + outfname
-        os.rename(outfname, new_outfname)
-        self.assertProcessStepsFilesEqual(
-            new_outfname,
-            os.path.join(self.testing_path, new_outfname))
-        os.remove(new_outfname)
-
-    def test_header(self):
-        """
-        Test lcheader
-        """
-        # Run the code
-        cmd = os.path.join(self.exec_path, 'lcheader.py') +\
-            ' --no_questions'
-        os.system(cmd)
-
-        outfname = 'generic.header.raw.lch'
-        # Check that the appropriate file was created
-        assert os.path.exists(outfname)
-
-        # Compare output binary file (fix.lch)
-        self.assertBinFilesEqual(
-            outfname,
-            os.path.join(self.testing_path, outfname))
-        os.remove(outfname)
+#     def test_dump(self):
+#         """
+#         Test lcdump outputs.
+#         """
+#         # WRITEOUT OF DATA HEADERS
+#         cmd = os.path.join(self.exec_path, 'lcdump.py') + ' ' +\
+#             os.path.join(self.testing_path, 'BUGGY.raw.lch') +\
+#             ' 5000 100  > temp_test.out'
+#         os.system(cmd)
+#         self.assertTextFilesEqual(
+#             'temp_test.out',
+#             os.path.join(self.testing_path, 'BUGGY_lcdump_5000_100.txt')
+#             )
+#         os.remove('temp_test.out')
+# 
+#         # WRITEOUT OF FILE HEADER
+# 
+#         # WRITEOUT OF DIRECTORY
+# 
+#     def test_fix_buggy(self):
+#         """
+#         Test lcfix on a typical (buggy) file
+#         """
+#         # Run the code
+#         cmd = os.path.join(self.exec_path, 'lcfix.py') + \
+#             ' -d ' + self.path + ' -i data BUGGY.raw.lch > temp'
+#         os.system(cmd)
+#         os.remove('temp')
+#         # print(os.listdir('.'))
+# 
+#         # Check that the appropriate files were created
+#         assert not os.path.exists('BUGGY.fix.timetears.txt')
+# 
+#         # Compare binary files (fix.lch)
+#         outfname = 'BUGGY.fix.lch'
+#         assert os.path.exists(outfname)
+#         self.assertBinFilesEqual(
+#             outfname,
+#             os.path.join(self.testing_path, outfname))
+#         os.remove(outfname)
+# 
+#         # Compare text files (fix.txt)
+#         outfname = 'BUGGY.fix.txt'
+#         assert os.path.exists(outfname)
+#         self.assertTextFilesEqual(
+#             outfname,
+#             os.path.join(self.testing_path, outfname))
+#         os.remove(outfname)
+# 
+#         # Compare text files (process-steps.json)
+#         outfname = 'process-steps.json'
+#         assert os.path.exists(outfname)
+#         new_outfname = 'BUGGY.' + outfname
+#         os.rename(outfname, new_outfname)
+#         self.assertProcessStepsFilesEqual(
+#             new_outfname,
+#             os.path.join(self.testing_path, new_outfname))
+#         os.remove(new_outfname)
+# 
+#     def test_fix_bad(self):
+#         """
+#         Test lcfix on a bad (full of time tears) file
+#         """
+#         # Run the code
+#         cmd = os.path.join(self.exec_path, 'lcfix.py') + \
+#             ' -d ' + self.path + ' -i data BAD.bad.lch > temp'
+#         os.system(cmd)
+#         os.remove('temp')
+# 
+#         # Confirm that no lch file was created
+#         assert not os.path.exists('BAD.fix.lch')
+# 
+#         # Compare text files (fix.txt)
+#         outfname = 'BAD.fix.txt'
+#         assert os.path.exists(outfname)
+#         self.assertTextFilesEqual(
+#             outfname,
+#             os.path.join(self.testing_path, outfname))
+#         os.remove(outfname)
+# 
+#         # Compare text files (fix.timetears.txt)
+#         outfname = 'BAD.fix.timetears.txt'
+#         assert os.path.exists(outfname)
+#         self.assertTextFilesEqual(
+#             outfname,
+#             os.path.join(self.testing_path, outfname))
+#         os.remove(outfname)
+# 
+#         # Compare process-steps files
+#         outfname = 'process-steps.json'
+#         assert os.path.exists(outfname)
+#         new_outfname = 'BAD.' + outfname
+#         os.rename(outfname, new_outfname)
+#         self.assertProcessStepsFilesEqual(
+#             new_outfname,
+#             os.path.join(self.testing_path, new_outfname))
+#         os.remove(new_outfname)
+# 
+#     def test_header(self):
+#         """
+#         Test lcheader
+#         """
+#         # Run the code
+#         cmd = os.path.join(self.exec_path, 'lcheader.py') +\
+#             ' --no_questions'
+#         os.system(cmd)
+# 
+#         outfname = 'generic.header.raw.lch'
+#         # Check that the appropriate file was created
+#         assert os.path.exists(outfname)
+# 
+#         # Compare output binary file (fix.lch)
+#         self.assertBinFilesEqual(
+#             outfname,
+#             os.path.join(self.testing_path, outfname))
+#         os.remove(outfname)
 
 
 def suite():

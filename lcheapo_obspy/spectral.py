@@ -10,6 +10,8 @@ import numpy as np
 import math as m
 import warnings
 
+from .Peterson_noise_model import PetersonNoiseModel
+
 # Set variables
 spect_library = 'scipy'  # 'mlab' or 'scipy': mlab gives weird coherences!
 
@@ -116,7 +118,7 @@ class PSD:
             PSD_units = "dB ref 1 count^2/Hz"
         return cls(_freq, spec, PSD_units, tr.stats)
 
-    def plot(self, ax=None, show=True, outfile=None):
+    def plot(self, ax=None, show=True, outfile=None, show_Peterson=True):
         """
         Plot a PSD
         """
@@ -127,6 +129,10 @@ class PSD:
             plt.figure()
             ax = plt.gca()
         ax.semilogx(self.freqs, 10 * np.log10(self.data))
+        if show_Peterson:
+            lownoise, highnoise = PetersonNoiseModel(self.freqs, True)
+            ax.semilogx(self.freqs, lownoise,'--')
+            ax.semilogx(self.freqs, highnoise,'--')
         ax.set_ylabel(self.units)
         # ax.title()
         ax.set_title(_seed_code(self.stats))
