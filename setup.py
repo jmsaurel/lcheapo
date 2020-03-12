@@ -28,8 +28,8 @@ setuptools.setup(
       ],
     entry_points={
          'console_scripts': [
-             'lcplot=lcheapo_obspy.lc_read:_plot_command',
-             'lc2ms_w=lcheapo_obspy.lc_read:_to_mseed_command',
+             'lcplot=lcheapo_obspy.lcread:_plot_command',
+             'lc2ms_w=lcheapo_obspy.lcread:_to_mseed_command',
              'lctest=lcheapo_obspy.lctest:main'
          ]
     },

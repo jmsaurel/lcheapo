@@ -8,7 +8,7 @@ Plots:
     - spectra from  multiple stations/channels
     - particle_motions between two channels
 """
-from .lc_read import read
+from .lcread import read
 from .spectral import PSDs
 from obspy.core import UTCDateTime, Stream
 from obspy.signal import PPSD
@@ -53,17 +53,6 @@ def main():
                     plot_span=_get_val('plot_span', plot, globs),
                     filebase=filebase,
                     show=show)
-    if 'spectra' in root['plots']:
-        for plot in root['plots']['spectra']:
-            spect = calc_spect(stream, plot,
-                               plot_globals.get('spectra', None))
-            if filebase:
-                spect.plot(outfile=filebase + '_'
-                                   + get_valid_filename(plot['description'])
-                                   + '_spect.png')
-            if show:
-                spect.plot()
-            # inv = read_inventory(arguments.sta_file)
     if 'particle_motion' in root['plots']:
         for plot in root['plots']['particle_motion']:
             tracex = stream.select(component=plot['orientation_code_x'])[0]
@@ -79,6 +68,17 @@ def main():
                 plot_span=_get_val('plot_span', plot, globs),
                 filebase=filebase,
                 show=show)
+    if 'spectra' in root['plots']:
+        for plot in root['plots']['spectra']:
+            spect = calc_spect(stream, plot,
+                               plot_globals.get('spectra', None))
+            if filebase:
+                spect.plot(outfile=filebase + '_'
+                                   + get_valid_filename(plot['description'])
+                                   + '_spect.png')
+            if show:
+                spect.plot()
+            # inv = read_inventory(arguments.sta_file)
 
 
 def calc_spect(stream, plot_parms, glob_parms=None):
@@ -93,9 +93,7 @@ def calc_spect(stream, plot_parms, glob_parms=None):
     if starttime or endtime:
         stream = stream.slice(starttime=starttime, endtime=endtime)
     # Calculate spectra
-    print(plot_parms, glob_parms)
     wl = _get_val('window_length_s', plot_parms, glob_parms)
-    print(stream, wl)
     if wl:
         spect = PSDs.calc(stream, window_length=wl)
     else:
@@ -158,10 +156,8 @@ def plot_stack(trace, times, description, offset_before=0.5, offset_after=1.5,
     ax = plt.axes()
     max_val = 0
     # Set up y axis range
-    print(trace)
     for time in times:
         temp = trace.slice(time - offset_before, time + offset_after)
-        print(temp)
         if abs(temp.max()) > max_val:
             max_val = abs(temp.max())
     # Plot the subtraces
@@ -219,11 +215,11 @@ def plot_particle_motion(tracex, tracey, times, description,
         tx = tracex.slice(time - offset_before_ts, time + offset_after_ts)
         ty = tracey.slice(time - offset_before_ts, time + offset_after_ts)
         axx.plot(tx.times("utcdatetime") - time, tx.data)
-        axx.axvline(offset_before)
+        axx.axvline(-offset_before)
         axx.axvline(offset_after)
         axx.set_ylabel(tx_comp)
         axy.plot(ty.times("utcdatetime") - time, ty.data)
-        axy.axvline(offset_before)
+        axy.axvline(-offset_before)
         axy.axvline(offset_after)
         axx.set_ylabel(ty_comp)
 
@@ -343,7 +339,7 @@ def read_files(inputs):
         s = read(df['name'],
                  starttime=inputs.get('starttime', False),
                  endtime=inputs.get('endtime', False),
-                 chan_map=df['obs_type'])
+                 obs_type=df['obs_type'])
         for t in s:
             t.stats.station = df['station']
         stream += s

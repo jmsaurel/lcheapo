@@ -99,13 +99,13 @@ class PSD:
             resp = None
 
         _freq = _freq[1:]
-        if resp:
+        if resp[0]:
             # Get the amplitude response (squared)
             respamp = np.absolute(resp * np.conjugate(resp))
             # Make omega with the same conventions as spec
             w = 2.0 * m.pi * _freq
             # Remove response
-            if tr.stats.response.response_stages[0].input_units.upper() == "PA":
+            if tr.stats.response.response_stages[0].input_units.upper()[:2] == "PA":
                 print('Channel {} has input_units "{}": treating as hydrophone'.
                       format(tr.stats.channel,
                              tr.stats.response.response_stages[0].input_units))
@@ -129,7 +129,7 @@ class PSD:
             plt.figure()
             ax = plt.gca()
         ax.semilogx(self.freqs, 10 * np.log10(self.data))
-        if show_Peterson:
+        if show_Peterson and not _seed_code(self.stats)[-1] == 'H':
             lownoise, highnoise = PetersonNoiseModel(self.freqs, True)
             ax.semilogx(self.freqs, lownoise,'--')
             ax.semilogx(self.freqs, highnoise,'--')

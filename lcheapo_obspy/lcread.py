@@ -7,22 +7,28 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-from lcheapo.lcheapo import (LCDataBlock, LCDiskHeader)
-from obspy.core import UTCDateTime, Stream, Trace
 import argparse
 import warnings
 import struct
 import time
+import os
+import sys
+import inspect
+
 import numpy as np
+from obspy.core import UTCDateTime, Stream, Trace
+from obspy import read_inventory
+
+from lcheapo.lcheapo import (LCDataBlock, LCDiskHeader)
 
 chan_maps = {'SPOBS1': ['SH3', 'BDH'],
              'SPOBS2': ['BDH', 'SH2', 'SH1', 'SH3'],
-             'BBOBS': ['SH2', 'SH1', 'SHZ', 'BDH'],
+             'BBOBS1': ['BH2', 'BH1', 'BHZ', 'BDH'],
              'HYDROCT': ['BDH:00', 'BDH:01', 'BDH:02', 'BDH:03']}
 
 
 def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
-         chan_map=None, debug=False):
+         obs_type=None):
     """
     Read LCHEAPO data into an obspy stream
 
@@ -37,10 +43,10 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
     :param network: Network code (up to two characters)
     :type  station: str
     :param station: FDSN station name (up to five characters)
-    :type  chan_map: list of str, or str
-    :param chan_map: Channel mappings: list of names or str of known type
+    :type  obs_type: str
+    :param obs_type: OBS type (must match a key in chan_maps)
     :return: stream
-    :rtype:  class `obspy.stream.Stream`
+    :rtype:  :class:`~obspy.core.stream.Stream`
 
     .. rubric:: Example
 
@@ -56,16 +62,13 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
         network = network[:2]
     if len(station) > 5:
         network = network[:5]
-    chan_map = _fill_chan_map(chan_map)
+    if not obs_type:
+        warnings.warn('No obs_type provided, assuming SPOBS2')
+        obs_type = 'SPOBS2'
 
-    if debug:
-        print('Reading LCHEAPO file {}'.format(filename), end='', flush=True)
-        start_time = time.time()
     with open(filename, 'rb') as fp:
         data = _read_data(starttime, endtime, fp)
-    if debug:
-        print('took {:.2f} seconds'.format(time.time() - start_time))
-    data = _stuff_info(data, network, station, chan_map)
+    data = _stuff_info(data, network, station, obs_type)
     return data
 
 
@@ -73,10 +76,9 @@ def get_data_timelimits(lcheapo_object):
     """
     Return data start and endtimes
 
-    :param lcheapo_object: Filename or open file like object that contains the
+    :param lcheapo_object: Filename or open file-like object that contains the
         binary Mini-SEED data.  Any object that provides a read() method will
-        be
-        considered to be a file like object.
+        be considered a file-like object.
     """
 
     if hasattr(lcheapo_object, "read"):
@@ -103,67 +105,19 @@ def get_data_timelimits(lcheapo_object):
     return UTCDateTime(starttime), UTCDateTime(endtime)
 
 
-def _read_data_old(starttime, endtime, fp):
-    """
-    Return data
-
-    Reads block by block
-
-    :param starttime: start time
-    :type  starttime: :class: `~obspy.UTCDateTime`
-    :param endtime: end time
-    :type  endtime: :class: `~obspy.UTCDateTime`
-    :param fp: file pointer
-    :type  fp: class `file`
-    """
-    starttime, endtime = _get_time_limits(starttime, endtime, fp)
-
-    lcHeader = LCDiskHeader()
-    block = LCDataBlock()
-    lcHeader.readHeader(fp)
-    samp_rate = lcHeader.realSampleRate
-    n_start_block = _get_block_number(starttime, fp)
-    n_end_block = _get_block_number(endtime, fp)
-    n_chans = lcHeader.numberOfChannels
-    stream = Stream()
-
-    block.seekBlock(fp, n_start_block)
-    arrays = []
-    stats = []
-    # Stuff first record for each channel
-    for i in range(0, n_chans):
-        block.readBlock(fp)
-        arrays.append(np.array(block.convertDataTo24BitValues()))
-        stats.append({'sampling_rate': samp_rate,
-                      'starttime': UTCDateTime(block.getDateTime())})
-    # Read the rest
-    for n_block in range(n_start_block+n_chans, n_end_block + n_chans):
-        block.readBlock(fp)
-        i_channel = block.muxChannel
-        arrays[i_channel] = np.append(arrays[i_channel],
-            np.array(block.convertDataTo24BitValues()))
-    i = 0
-    for array in arrays:
-        stream.append(Trace(data=array.astype('int32'), header=stats[i]))
-        i += 1
-    return stream.slice(starttime, endtime)
-
-
-def _read_data(starttime, endtime, fp, debug=False):
+def _read_data(starttime, endtime, fp):
     """
     Return data
 
     Reads all blocks at once and extracts as slices
 
     :param starttime: start time
-    :type  starttime: :class: `~obspy.UTCDateTime`
+    :type  starttime: :class:`~obspy.UTCDateTime`
     :param endtime: end time
-    :type  endtime: :class: `~obspy.UTCDateTime`
+    :type  endtime: :class:`~obspy.UTCDateTime`
     :param fp: file pointer
     :type  fp: class `file`
     """
-    if debug:
-        start_read = time.time()
     starttime, endtime = _get_time_limits(starttime, endtime, fp)
 
     lcHeader = LCDiskHeader()
@@ -179,26 +133,14 @@ def _read_data(starttime, endtime, fp, debug=False):
     read_blocks = chan_blocks * n_chans
     block.seekBlock(fp, n_start_block)
     buf = fp.read(read_blocks * 512)
-    if debug:
-        print('{:.3f}s for fp.read()'.format(time.time()-start_read))
-        last_read = time.time()
     dt = np.dtype('b')
     all = np.frombuffer(buf, dtype=dt)
-    if debug:
-        print('{:.3f}s to .frombuffer'.format(time.time() - last_read))
-        last_read = time.time()
-    a = np.reshape(all, (read_blocks, 512)) # keep data contiguous
-    if debug:
-        print('{:.3f}s to reshape'.format(time.time() - last_read))
-        last_read = time.time()
+    a = np.reshape(all, (read_blocks, 512))  # keep data contiguous
     # The following seems to take the same time ...
     # a = all.view()
     # a.shape = (read_blocks,512)
     headers = a[:, :14]
     data = a[:, 14:]
-    if debug:
-        print('{:.3f}s to extract headers and data'.format(time.time() - last_read))
-        last_read = time.time()
 
     # Extract data
     s_per_block = 166 / samp_rate
@@ -207,9 +149,6 @@ def _read_data(starttime, endtime, fp, debug=False):
         # Get header information and whether data are contiguous
         first_time = _get_header_time(headers[0, :])
         last_time = _get_header_time(headers[-1, :])
-        if debug:
-            print('{:d}: {:.3f}s to read times'.format(i, time.time() - last_read))
-            last_read = time.time()
         offset = (last_time - first_time) - (chan_blocks - 1) * s_per_block
         if offset > 0:
             warnings.warn('Last block {:g}s ({:g} blocks) late!'.format(
@@ -220,28 +159,13 @@ def _read_data(starttime, endtime, fp, debug=False):
         stats['starttime'] = first_time
         # Get data
         chan_data = data[i:read_blocks:n_chans, :].flatten()
-        if debug:
-            print('   {:.3f}s to slice data'.format(time.time() - last_read))
-            last_read = time.time()
         # could be quicker using the np.flat() iterator ?
-        t32 = np.array(chan_data[0:498*chan_blocks:3]*(1<<16) +\
-                       chan_data[1:498*chan_blocks:3].astype('B')*(1<<8) +\
-                       chan_data[2:498*chan_blocks:3].astype('B'),
+        t32 = np.array(chan_data[0: 498*chan_blocks: 3]*(1 << 16)
+                       + chan_data[1: 498*chan_blocks: 3].astype('B')
+                       * (1 << 8)
+                       + chan_data[2: 498*chan_blocks: 3].astype('B'),
                        dtype='int32')
-        # t32 = np.array([x * (1 << 16) + y * (1 << 8) + z
-        #                 for x, y, z in 
-        #                 [struct.unpack(">bBB", chan_data[x:x + 3])
-        #                  for x in range(0, 498 * chan_blocks, 3)]],
-        #                 dtype='int32')
-        if debug:
-            print('   {:.3f}s to convert to 24-bit'.format(time.time() - last_read))
-            last_read = time.time()
         stream.append(Trace(data=t32, header=stats))
-        if debug:
-            print('   {:.3f}s to stream.append'.format(time.time() - last_read))
-            last_read = time.time()
-    if debug:
-        print('{:.3f}s total read time '.format(time.time() - start_read))
     return stream
 
 
@@ -299,9 +223,9 @@ def _get_block_number(time, fp):
     Return block number containing first channel containing the given time
 
     :param time: the time
-    :type  time: class `~obspy.UTCDateTime`
+    :type  time: :class:`~obspy.UTCDateTime`
     :param fp: file pointer
-    :type  fp: class `file`
+    :type  fp: :class:`~file`
     """
     lcHeader = LCDiskHeader()
     block = LCDataBlock()
@@ -318,22 +242,24 @@ def _get_block_number(time, fp):
     return data_start_block + record_offset * num_chans
 
 
-def _stuff_info(stream, network, station, chan_map):
+def _stuff_info(stream, network, station, obs_type):
     """
-    Put network, station and channel information into stream
+    Put network, station and channel information into station stream
 
     :param stream: obspy stream
-    :type  stream: class `~obspy.stream.Stream`
+    :type  stream: :class:`~obspy.stream.Stream`
     :param network: network code
     :type  network: str
     :param station: station code
     :type  station: str
-    :param chan_map: channel mapping
-    :type  chan_map: list
+    :param obs_type: type of obs (must be a key in channel_maps)
+    :type  obs_type: str
 
     :return data: informed data
-    :rtype  data: class `~obspy.stream.Stream`
+    :rtype  data: :class:`~obspy.stream.Stream`
     """
+    assert obs_type in chan_maps
+    chan_map = chan_maps[obs_type]
     chan_map_list = list(chan_map)
     for trace in stream:
         trace.stats.network = network
@@ -344,29 +270,33 @@ def _stuff_info(stream, network, station, chan_map):
             if len(chan_loc) > 1:
                 trace.stats.location = chan_loc[1]
             chan_map_list.pop(0)
+        trace.stats.response = _load_response(obs_type, trace.stats.channel,
+                                              trace.stats.starttime)
     return stream
 
-
-def _fill_chan_map(inp):
+def _load_response(obs_type, channel, datetime):
     """
-    Fill and/or verify channel mappings
+    Load response corresponding to OBS type and component
 
-    inp: either a known LCHEAPO INSTRUMENT MODEL or a list of channel names
+    :param obs_type: obs type
+    :type  obs_type: str
+    :param channel: trace channel code
+    :param datetime: time for which to get response
+    :type datetime: :class:`~obspy.UTCDateTime`
+
+    :return data: instrument response
+    :rtype  data: :class:`~obspy.core.response.Response`
     """
-    if isinstance(inp, str):
-        if inp in chan_maps:
-            return chan_maps[inp]
-        else:
-            print('Unknown LCHEAPO instrument: {}, choose from {}'.format(
-                inp, [s for s in chan_maps]))
-    elif isinstance(inp, list):
-        if _valid_chan_map(inp):
-            return(inp)
-        else:
-            print("Bad channel map")
-    else:
-        print("Input is neither an inst type nor a list of channel names")
-    return None
+    assert obs_type in chan_maps
+    try:
+        basepath = os.path.dirname(os.path.abspath(inspect.getfile(
+                                       inspect.currentframe())))
+        inv_file = os.path.join(basepath, f'data/{obs_type}.station.xml')
+        inv = read_inventory(inv_file)
+    except:
+        print(f'Could not read inventory file {inv_file}')
+        sys.exit()
+    return inv.get_response(f'XX.SPOB2.00.{channel}',datetime)
 
 
 def _valid_chan_map(chan_map):
@@ -417,7 +347,6 @@ def _plot_command():
                   network=args.network,
                   station=args.station,
                   chan_map=args.obs_type)
-    print(stream)
     stream.plot(size=(800, 600), equal_scale=False, method='full')
 
 
@@ -467,6 +396,50 @@ def _normalize_time_arg(a):
     else:
         return temp
 
+
+# def _read_data_old(starttime, endtime, fp):
+#     """
+#     Return data
+#
+#     Reads block by block
+#
+#     :param starttime: start time
+#     :type  starttime: :class: `~obspy.UTCDateTime`
+#     :param endtime: end time
+#     :type  endtime: :class: `~obspy.UTCDateTime`
+#     :param fp: file pointer
+#     :type  fp: class `file`
+#     """
+#     starttime, endtime = _get_time_limits(starttime, endtime, fp)
+#     lcHeader = LCDiskHeader()
+#     block = LCDataBlock()
+#     lcHeader.readHeader(fp)
+#     samp_rate = lcHeader.realSampleRate
+#     n_start_block = _get_block_number(starttime, fp)
+#     n_end_block = _get_block_number(endtime, fp)
+#     n_chans = lcHeader.numberOfChannels
+#     stream = Stream()
+#
+#     block.seekBlock(fp, n_start_block)
+#     arrays = []
+#     stats = []
+#     # Stuff first record for each channel
+#     for i in range(0, n_chans):
+#         block.readBlock(fp)
+#         arrays.append(np.array(block.convertDataTo24BitValues()))
+#         stats.append({'sampling_rate': samp_rate,
+#                       'starttime': UTCDateTime(block.getDateTime())})
+#     # Read the rest
+#     for n_block in range(n_start_block+n_chans, n_end_block + n_chans):
+#         block.readBlock(fp)
+#         i_channel = block.muxChannel
+#         arrays[i_channel] = np.append(arrays[i_channel],
+#             np.array(block.convertDataTo24BitValues()))
+#     i = 0
+#     for array in arrays:
+#         stream.append(Trace(data=array.astype('int32'), header=stats[i]))
+#         i += 1
+#     return stream.slice(starttime, endtime)
 
 # ---------------------------------------------------------------------------
 # Run 'main' if the script is not imported as a module
