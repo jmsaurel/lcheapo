@@ -20,11 +20,10 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
           'obspy>=1.1',
-          'lcheapo>=0.7',
-          'numpy>=1.17',
-          'scipy>=1.3',
-          'matplotlib>3.0',
-          'PyYAML>3.0'
+          'pyyaml>3.0'
+          'jsonschema>=2.6',
+          'jsonref>=0.2',
+          'lcheapo>=0.7'
       ],
     entry_points={
          'console_scripts': [
