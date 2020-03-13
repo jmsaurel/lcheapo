@@ -21,9 +21,9 @@ from obspy import read_inventory
 
 from lcheapo.lcheapo import (LCDataBlock, LCDiskHeader)
 
-chan_maps = {'SPOBS1': ['SH3', 'BDH'],
-             'SPOBS2': ['BDH', 'SH2', 'SH1', 'SH3'],
-             'BBOBS1': ['BH2', 'BH1', 'BHZ', 'BDH'],
+chan_maps = {'SPOBS1': ['SH3:00', 'BDH:00'],
+             'SPOBS2': ['BDH:00', 'SH2:00', 'SH1:00', 'SH3:00'],
+             'BBOBS1': ['BH2:00', 'BH1:00', 'BHZ:00', 'BDH:00'],
              'HYDROCT': ['BDH:00', 'BDH:01', 'BDH:02', 'BDH:03']}
 
 
@@ -274,7 +274,7 @@ def _stuff_info(stream, network, station, obs_type):
                                               trace.stats.starttime)
     return stream
 
-def _load_response(obs_type, channel, datetime):
+def _load_response(obs_type, channel, start_time):
     """
     Load response corresponding to OBS type and component
 
@@ -296,7 +296,29 @@ def _load_response(obs_type, channel, datetime):
     except:
         print(f'Could not read inventory file {inv_file}')
         sys.exit()
-    return inv.get_response(f'XX.SPOB2.00.{channel}',datetime)
+    
+    net = inv[0].code
+    loc = inv[0][0][0].location_code
+    sta = inv[0][0].code
+    seed_id = f'{net}.{sta}.{loc}.{channel}'
+    try:
+        resp = inv.get_reponse(seed_id, start_time)
+    except:
+        chan = inv.select(network=net, station=sta, location=loc, channel=channel,
+                     time=start_time)[0][0][0]
+        try:
+            resp = chan.response
+        except:
+            print(f'No response matching "{seed_id}" at {start_time}')
+            print('Options were: ')
+            for net in inv:
+                for sta in net:
+                    for ch in sta:
+                        print(' "{}.{}.{}.{}" : {} - {}'.format(
+                            net.code,sta.code,ch.location_code,ch.code,
+                            ch.start_date, ch.end_date))
+            return []
+    return resp
 
 
 def _valid_chan_map(chan_map):
