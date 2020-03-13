@@ -297,27 +297,17 @@ def _load_response(obs_type, channel, start_time):
         print(f'Could not read inventory file {inv_file}')
         sys.exit()
     
-    net = inv[0].code
-    loc = inv[0][0][0].location_code
-    sta = inv[0][0].code
-    seed_id = f'{net}.{sta}.{loc}.{channel}'
     try:
-        resp = inv.get_reponse(seed_id, start_time)
+        resp = inv.select(channel=channel, time=start_time)[0][0][0].response
     except:
-        chan = inv.select(network=net, station=sta, location=loc, channel=channel,
-                     time=start_time)[0][0][0]
-        try:
-            resp = chan.response
-        except:
-            print(f'No response matching "{seed_id}" at {start_time}')
-            print('Options were: ')
-            for net in inv:
-                for sta in net:
-                    for ch in sta:
-                        print(' "{}.{}.{}.{}" : {} - {}'.format(
-                            net.code,sta.code,ch.location_code,ch.code,
-                            ch.start_date, ch.end_date))
-            return []
+        print(f'No response matching "{channel}" at {start_time}')
+        print('Options were: ')
+        for net in inv:
+            for sta in net:
+                for ch in sta:
+                    print(' "{}" : {} - {}'.format(ch.code, ch.start_date,
+                                                   ch.end_date))
+        return []
     return resp
 
 
