@@ -346,7 +346,7 @@ def _plot_command():
                   _normalize_time_arg(args.endtime),
                   network=args.network,
                   station=args.station,
-                  chan_map=args.obs_type)
+                  obs_type=args.obs_type)
     stream.plot(size=(800, 600), equal_scale=False, method='full')
 
 

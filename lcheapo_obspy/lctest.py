@@ -8,16 +8,23 @@ Plots:
     - spectra from  multiple stations/channels
     - particle_motions between two channels
 """
-from .lcread import read
-from .spectral import PSDs
-from obspy.core import UTCDateTime, Stream
-from obspy.signal import PPSD
 import numpy as np
 import yaml
 import sys
 import re
 import argparse
+import pkg_resources
+import os
+import json
+
+import jsonref
+import jsonschema
 from matplotlib import pyplot as plt
+from obspy.core import UTCDateTime, Stream
+from obspy.signal import PPSD
+
+from .lcread import read as lcread
+from .spectral import PSDs
 
 
 def main():
@@ -48,8 +55,8 @@ def main():
                     trace,
                     [UTCDateTime(t) for t in plot['times']],
                     plot['description'],
-                    offset_before=_get_val('offset_before', plot, globs),
-                    offset_after=_get_val('offset_after', plot, globs),
+                    offset_before=_get_val('offset_before.s', plot, globs),
+                    offset_after=_get_val('offset_after.s', plot, globs),
                     plot_span=_get_val('plot_span', plot, globs),
                     filebase=filebase,
                     show=show)
@@ -61,10 +68,10 @@ def main():
             plot_particle_motion(
                 tracex, tracey, [UTCDateTime(t) for t in plot['times']],
                 plot['description'],
-                offset_before=_get_val('offset_before', plot, globs),
-                offset_after=_get_val('offset_after', plot, globs),
-                offset_before_ts=_get_val('offset_before_ts', plot, globs),
-                offset_after_ts=_get_val('offset_after_ts', plot, globs),
+                offset_before=_get_val('offset_before.s', plot, globs),
+                offset_after=_get_val('offset_after.s', plot, globs),
+                offset_before_ts=_get_val('offset_before_ts.s', plot, globs),
+                offset_after_ts=_get_val('offset_after_ts.s', plot, globs),
                 plot_span=_get_val('plot_span', plot, globs),
                 filebase=filebase,
                 show=show)
@@ -74,8 +81,8 @@ def main():
                                plot_globals.get('spectra', None))
             if filebase:
                 spect.plot(outfile=filebase + '_'
-                                   + get_valid_filename(plot['description'])
-                                   + '_spect.png')
+                           + get_valid_filename(plot['description'])
+                           + '_spect.png')
             if show:
                 spect.plot()
             # inv = read_inventory(arguments.sta_file)
@@ -93,7 +100,7 @@ def calc_spect(stream, plot_parms, glob_parms=None):
     if starttime or endtime:
         stream = stream.slice(starttime=starttime, endtime=endtime)
     # Calculate spectra
-    wl = _get_val('window_length_s', plot_parms, glob_parms)
+    wl = _get_val('window_length.s', plot_parms, glob_parms)
     if wl:
         spect = PSDs.calc(stream, window_length=wl)
     else:
@@ -336,10 +343,10 @@ def read_files(inputs):
     """
     stream = Stream()
     for df in inputs['datafiles']:
-        s = read(df['name'],
-                 starttime=inputs.get('starttime', False),
-                 endtime=inputs.get('endtime', False),
-                 obs_type=df['obs_type'])
+        s = lcread(df['name'],
+                   starttime=inputs.get('starttime', False),
+                   endtime=inputs.get('endtime', False),
+                   obs_type=df['obs_type'])
         for t in s:
             t.stats.station = df['station']
         stream += s
@@ -372,14 +379,62 @@ def _plot_span(times, stream):
     stream.slice(first - span / 2, last + span / 2).plot()
 
 
-def read_lctest_yaml(filename='_examples/events_secondtest.yaml'):
+def read_lctest_yaml(filename):
     """
     Verify and read in an lctest yaml file
     """
-    print('VERIFY LCTEST.YAML NOT YET IMPLEMENTED!')
     with open(filename) as f:
         root = yaml.safe_load(f)
+        if not validate_schema04(root, 'lctest'):
+            sys.exit()
     return root
+
+
+def validate_schema04(instance: dict, type: str = 'lctest'):
+    """
+    Validates a data structure against a draft 04 jsonschema
+
+    :param instance: data structure read from a yaml or json filebase
+    :param type: type of the data structure
+    """
+    schema_file = pkg_resources.resource_filename(
+        "lcheapo_obspy", f"data/{type}.schema.json")
+    base_path = os.path.dirname(schema_file)
+    base_uri = f"file:{base_path}/"
+    with open(schema_file, "r") as f:
+        try:
+            schema = jsonref.loads(f.read(), base_uri=base_uri,
+                                   jsonschema=True)
+        except json.decoder.JSONDecodeError as e:
+            print(f"JSONDecodeError: Error loading schema file: {schema_file}")
+            print(str(e))
+            return False
+        # except:
+        #     print(f"Error loading JSON schema file: {schema_file}")
+        #     print(sys.exc_info()[1])
+        #     return False
+
+    # Lazily report all errors in the instance
+    # ASSUMES SCHEMA IS DRAFT-04
+    try:
+        v = jsonschema.Draft4Validator(schema)
+
+        if not v.is_valid(instance):
+            print("")
+            for error in sorted(v.iter_errors(instance), key=str):
+                print("\t\t", end="")
+                for elem in error.path:
+                    print(f"['{elem}']", end="")
+                print(f": {error.message}")
+            print("\tFAILED")
+            return False
+        else:
+            print("OK")
+            return True
+    except jsonschema.ValidationError as e:
+        print("")
+        print("\t" + e.message)
+        return False
 
 
 if __name__ == '__main__':
