@@ -291,7 +291,7 @@ def _load_response(obs_type, channel, start_time):
     try:
         basepath = os.path.dirname(os.path.abspath(inspect.getfile(
                                        inspect.currentframe())))
-        inv_file = os.path.join(basepath, f'data/{obs_type}.station.xml')
+        inv_file = os.path.join(basepath, 'data', f'{obs_type}.station.xml')
         inv = read_inventory(inv_file)
     except:
         print(f'Could not read inventory file {inv_file}')
