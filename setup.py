@@ -16,7 +16,9 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/x-rst; charset=UTF-8",
     url="https://github.com/WayneCrawford/lcheapo_obspy",
-    packages=setuptools.find_packages(),
+    packages=['lcheapo_obspy'],
+    package_dir={'lcheapo_obspy': 'lcheapo_obspy'},
+    package_data={'lcheapo_obspy': ['data/*.xml', 'data/*.json']},
     include_package_data=True,
     install_requires=[
           'obspy>=1.1',
