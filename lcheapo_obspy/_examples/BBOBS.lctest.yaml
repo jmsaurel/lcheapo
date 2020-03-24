@@ -41,8 +41,8 @@
             -
                 description: "Fake stack, no tests run"
                 orientation_codes: ["Z"]
-                offset_after: 5
-                offset_before: 25
+                offset_before.s: 1
+                offset_after.s: 5
                 times: 
                     - "2012-10-05T05:12:10"
                     - "2012-10-05T05:13:50"

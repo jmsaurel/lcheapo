@@ -14,9 +14,9 @@ import jsonref
 import yaml
 
 VALID_FORMATS = ["JSON", "YAML"]
-VALID_TYPES = ["test"]
+VALID_TYPES = ["lctest"]
 DEFAULT_SCHEMA = pkg_resources.resource_filename("lcheapo_obspy",
-                                                 "data/test.schema.json")
+                                                 "data/lctest.schema.json")
 
 
 def list_valid_types():

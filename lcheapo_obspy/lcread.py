@@ -110,7 +110,6 @@ def _read_data(starttime, endtime, fp):
     Return data
 
     Reads all blocks at once and extracts as slices
-
     :param starttime: start time
     :type  starttime: :class:`~obspy.UTCDateTime`
     :param endtime: end time
@@ -123,15 +122,18 @@ def _read_data(starttime, endtime, fp):
     lcHeader = LCDiskHeader()
     block = LCDataBlock()
     lcHeader.readHeader(fp)
-    samp_rate = lcHeader.realSampleRate
-    n_start_block = _get_block_number(starttime, fp)
-    n_end_block = _get_block_number(endtime, fp)
+    # lcHeader.printHeader()
+    sample_rate = lcHeader.realSampleRate
     n_chans = lcHeader.numberOfChannels
+    n_start_block = _get_block_number(starttime, fp)
+    n_end_block = _get_block_number(endtime, fp) + n_chans - 1
     stream = Stream()
 
-    chan_blocks = 1 + int(((n_end_block - n_start_block) / n_chans))
+    chan_blocks = int(((n_end_block - n_start_block + 1) / n_chans))
     read_blocks = chan_blocks * n_chans
     block.seekBlock(fp, n_start_block)
+        
+    # Read the data and arrange in read_blocks*512 array
     buf = fp.read(read_blocks * 512)
     dt = np.dtype('b')
     all = np.frombuffer(buf, dtype=dt)
@@ -142,21 +144,24 @@ def _read_data(starttime, endtime, fp):
     headers = a[:, :14]
     data = a[:, 14:]
 
-    # Extract data
-    s_per_block = 166 / samp_rate
-    stats = {'sampling_rate': samp_rate}
+    # Get header information and determine if data are contiguous
+    samples_per_block = _get_header_nsamples(headers[0,:])
+    seconds_per_block = samples_per_block / sample_rate
+    last_time = _get_header_time(headers[-n_chans, :])
+    first_time = _get_header_time(headers[0, :])
+    timerange = last_time - first_time
+    expected_timerange = (chan_blocks - 1) * seconds_per_block
+    offset = timerange - expected_timerange
+    if offset > 0:
+        warnings.warn('Last block is late!: {:g} seconds, {:g} samples, {:g} blocks'.format(
+                offset, offset*sample_rate, offset/seconds_per_block))
+    elif offset < 0:
+        warnings.warn('Last block is early!: {:g} seconds, {:g} samples, {:g} blocks'.format(
+                -offset, -offset*sample_rate, -offset/seconds_per_block))
+    stats = {'sampling_rate': sample_rate, 'starttime': first_time}
+
+    # Extract channels
     for i in range(0, n_chans):
-        # Get header information and whether data are contiguous
-        first_time = _get_header_time(headers[0, :])
-        last_time = _get_header_time(headers[-1, :])
-        offset = (last_time - first_time) - (chan_blocks - 1) * s_per_block
-        if offset > 0:
-            warnings.warn('Last block {:g}s ({:g} blocks) late!'.format(
-                    offset, offset/s_per_block))
-        elif offset < 0:
-            warnings.warn('Last block {:g}s ({:g} blocks) early!'.format(
-                    -offset, -offset/s_per_block))
-        stats['starttime'] = first_time
         # Get data
         chan_data = data[i:read_blocks:n_chans, :].flatten()
         # could be quicker using the np.flat() iterator ?
@@ -177,9 +182,17 @@ def _get_header_time(header):
     """
     (msec, second, minute, hour, day, month, year) = struct.unpack(
         '>HBBBBBB', header.data[:8])
-    return UTCDateTime(year + 2000, month, day, hour, minute, second,
-                       msec + 1000)
+    return UTCDateTime(year + 2000, month, day, hour, minute, second +
+                       msec/1000)
 
+def _get_header_nsamples(header):
+    """
+    Return number of samples from an LCHEAPO header
+
+    header = 14-byte LCHEAPO HEADER
+    """
+    (U1, U2) =  struct.unpack('>BB', header.data[12:])
+    return U2
 
 def _get_time_limits(starttime, endtime, fp):
     """

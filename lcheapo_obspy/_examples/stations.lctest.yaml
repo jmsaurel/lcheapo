@@ -21,16 +21,16 @@
         filebase: "MAYOBS6"
     plot_globals:
         stack:
-            offset_before: 0.5
-            offset_after:  1.5
+            offset_before.s: 0.5
+            offset_after.s:  1.5
             plot_span: False
         particle_motion:
-            offset_before: 0.00
-            offset_after: 0.03
-            offset_before_ts: 0.1
-            offset_after_ts: 0.2
+            offset_before.s: 0.00
+            offset_after.s: 0.03
+            offset_before_ts.s: 0.1
+            offset_after_ts.s: 0.2
         spectra:
-            window_length_s: 100
+            window_length.s: 100
     plots:
         time_series:
             -
@@ -42,12 +42,12 @@
                 description: Quiet period 
                 select: {channel: "*3"}
                 start_time: null
-                end_time: 2019-11-07T13:57
+                end_time: "2019-11-07T13:57"
             -
                 description: Rubber hammer taps 
                 select: {station: "*"}
-                start_time: 2019-11-07T14:08
-                end_time: 2019-11-07T14:11:10
+                start_time: "2019-11-07T14:08"
+                end_time: "2019-11-07T14:11:10"
         spectra:
             -
                 description: Entire time series 
@@ -58,4 +58,4 @@
                 description: Quiet period 
                 select: {channel: "*3"}
                 start_time: null
-                end_time: 2019-11-07T13:57
+                end_time: "2019-11-07T13:57"

@@ -2,10 +2,10 @@ import setuptools
 
 with open("README.rst", "r") as fh:
     long_description = fh.read()
-    
-version={}
+
+version = {}
 with open("lcheapo_obspy/version.py") as fp:
-    exec(fp.read(),version)
+    exec(fp.read(), version)
 
 setuptools.setup(
     name="lcheapo_obspy",
@@ -16,10 +16,12 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/x-rst; charset=UTF-8",
     url="https://github.com/WayneCrawford/lcheapo_obspy",
+    # packages=setuptools.find_packages(),
     packages=['lcheapo_obspy'],
     package_dir={'lcheapo_obspy': 'lcheapo_obspy'},
-    package_data={'lcheapo_obspy': ['data/*.xml', 'data/*.json']},
-    include_package_data=True,
+    package_data={'lcheapo_obspy': ['data/*.xml', 'data/*.json',
+                                    '_examples/*.py', '_examples/*.yaml']},
+    # include_package_data=True,
     install_requires=[
           'obspy>=1.1',
           'pyyaml>3.0'
@@ -30,8 +32,9 @@ setuptools.setup(
     entry_points={
          'console_scripts': [
              'lcplot=lcheapo_obspy.lcread:_plot_command',
-             'lc2ms_w=lcheapo_obspy.lcread:_to_mseed_command',
-             'lctest=lcheapo_obspy.lctest:main'
+             'lc2ms_weak=lcheapo_obspy.lcread:_to_mseed_command',
+             'lctest=lcheapo_obspy.lctest:main',
+             'lc_examples=lcheapo_obspy.lcputexamples:main'
          ]
     },
     python_requires='>=3.6',

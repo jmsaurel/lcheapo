@@ -48,9 +48,11 @@ def main():
                              show=show)
     if 'stack' in root['plots']:
         for plot in root['plots']['stack']:
-            globs = plot_globals['stack']
+            globs = plot_globals.get('stack', None)
+            print(f'globs={globs}')
+            print(f'plot={plot}')
             for o_code in plot['orientation_codes']:
-                trace = stream.select(component=o_code)[0]
+                trace = _trace_component(stream, o_code)
                 plot_stack(
                     trace,
                     [UTCDateTime(t) for t in plot['times']],
@@ -62,8 +64,10 @@ def main():
                     show=show)
     if 'particle_motion' in root['plots']:
         for plot in root['plots']['particle_motion']:
-            tracex = stream.select(component=plot['orientation_code_x'])[0]
-            tracey = stream.select(component=plot['orientation_code_y'])[0]
+            tracex = _trace_component(stream, plot['orientation_code_x'])
+            tracey = _trace_component(stream, plot['orientation_code_y'])
+            # tracex = stream.select(component=plot['orientation_code_x'])[0]
+            # tracey = stream.select(component=plot['orientation_code_y'])[0]
             globs = plot_globals['particle_motion']
             plot_particle_motion(
                 tracex, tracey, [UTCDateTime(t) for t in plot['times']],
@@ -86,6 +90,15 @@ def main():
             if show:
                 spect.plot()
             # inv = read_inventory(arguments.sta_file)
+
+
+def _trace_component(stream, component):
+    """ Return the first trace corresponding to the given component """
+    try:
+        return stream.select(component=component)[0]
+    except IndexError:
+        print(f'Did not find component {component}')
+        sys.exit()
 
 
 def calc_spect(stream, plot_parms, glob_parms=None):
@@ -152,8 +165,10 @@ def plot_stack(trace, times, description, offset_before=0.5, offset_after=1.5,
     plot_span: whether to plot a time series spanning the first to last time
     """
     title = description + f', orientation_code="{trace.stats.channel[-1]}"'
-    assert offset_before >= 0, f'offset_before < 0 ({offset_before:g})'
-    assert offset_after > 0, f'offset_after <= 0 ({offset_after:g})'
+    assert offset_before >= 0,\
+        f'plot_stack "{description}": offset_before < 0 ({offset_before:g})'
+    assert offset_after > 0,\
+        f'plot_stack "{description}": offset_after <= 0 ({offset_after:g})'
     if plot_span:
         _plot_span(times, Stream(traces=[trace]))
     print(f'Plotting stack "{title}"')
@@ -217,18 +232,11 @@ def plot_particle_motion(tracex, tracey, times, description,
     axy = fig.add_subplot(gs[1, :2], sharex=axx, sharey=axx)
     # one column, one row
     axxy = fig.add_subplot(gs[1, 2], sharey=axy)
+    print(type(offset_before_ts),type(offset_after_ts))
     for time in times:
         # time series plots
-        tx = tracex.slice(time - offset_before_ts, time + offset_after_ts)
-        ty = tracey.slice(time - offset_before_ts, time + offset_after_ts)
-        axx.plot(tx.times("utcdatetime") - time, tx.data)
-        axx.axvline(-offset_before)
-        axx.axvline(offset_after)
-        axx.set_ylabel(tx_comp)
-        axy.plot(ty.times("utcdatetime") - time, ty.data)
-        axy.axvline(-offset_before)
-        axy.axvline(offset_after)
-        axx.set_ylabel(ty_comp)
+        _plot_one_ts(axx, tracex, tx_comp, time, offset_before_ts, offset_after_ts)
+        _plot_one_ts(axy, tracey, ty_comp, time, offset_before_ts, offset_after_ts)
 
         # partical motion plot
         tx = tracex.slice(time - offset_before, time + offset_after)
@@ -245,6 +253,14 @@ def plot_particle_motion(tracex, tracey, times, description,
                     '_pm.png')
     if show:
         plt.show()
+
+
+def _plot_one_ts(ax, trace, comp, time, offset_before, offset_after):
+    t = trace.slice(time - offset_before, time + offset_after)
+    ax.plot(t.times("utcdatetime") - time, t.data)
+    ax.axvline(-offset_before, color='k', linestyle='--')
+    ax.axvline(offset_after, color='k', linestyle='--')
+    ax.set_ylabel(comp)
 
 
 def plot_PPSD(trace, sta, start_time, interval=7200, filebase=None,
@@ -314,24 +330,23 @@ def _get_val(key, dict1, dict2):
 def get_plot_globals(root):
     """
     Return global plot values
-
-    For now, just offset_before and offset_after
     """
-    globals = {'stack': {'offset_before': False,
-                         'offset_after': False,
-                         'plot_span': False},
-               'particle_motion': {'offset_before': False,
-                                   'offset_after': False,
-                                   'offset_before_ts': False,
-                                   'offset_after_ts': False,
-                                   'plot_span': False}}
-    if 'plot_globals' in root:
-        plot_globals = root['plot_globals']
-        for type in globals:
-            if type in plot_globals:
-                for parm in globals[type]:
-                    if parm in plot_globals[type]:
-                        globals[type][parm] = plot_globals[type][parm]
+#     globals = {'stack': {'offset_before.s': False,
+#                          'offset_after.s': False,
+#                          'plot_span': False},
+#                'particle_motion': {'offset_before.s': False,
+#                                    'offset_after.s': False,
+#                                    'offset_before_ts.s': False,
+#                                    'offset_after_ts.s': False,
+#                                    'plot_span': False}}
+#     if 'plot_globals' in root:
+#         plot_globals = root['plot_globals']
+#         for type in globals:
+#             if type in plot_globals:
+#                 for parm in globals[type]:
+#                     if parm in plot_globals[type]:
+#                         globals[type][parm] = plot_globals[type][parm]
+    globals = root.get('plot_globals',None)
     return globals
 
 
