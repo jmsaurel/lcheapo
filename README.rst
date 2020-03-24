@@ -12,16 +12,9 @@ Command-line programs:
 
 - lcplot: plot an LCHEAPO file
 - lctest: plot LCHEAPO tests
-- lc2ms_w: converts LCHEAPO file to miniseed (basic, NO drift correction)
+- lc2ms_weak: converts LCHEAPO file to miniseed (basic, NO drift correction)
+- lc_examples: create a directory with examples of lcplot and lctest
 
-
-Other subdirectories
-======================
-
-`lcheapo_obspy/_examples/`
-------------------------------------------------------------
-
-Contains example information files and scripts:
 
 Use `reStructuredText
 <http://docutils.sourceforge.net/rst.html>`_ to modify this file.
