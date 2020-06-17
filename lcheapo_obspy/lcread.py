@@ -14,6 +14,7 @@ import time
 import os
 import sys
 import inspect
+import re
 
 import numpy as np
 from obspy.core import UTCDateTime, Stream, Trace
@@ -117,7 +118,7 @@ def _read_data(starttime, endtime, fp):
     :param fp: file pointer
     :type  fp: class `file`
     """
-    starttime, endtime = _get_time_limits(starttime, endtime, fp)
+    starttime, endtime = _convert_time_bounds(starttime, endtime, fp)
 
     lcHeader = LCDiskHeader()
     block = LCDataBlock()
@@ -194,7 +195,7 @@ def _get_header_nsamples(header):
     (U1, U2) =  struct.unpack('>BB', header.data[12:])
     return U2
 
-def _get_time_limits(starttime, endtime, fp):
+def _convert_time_bounds(starttime, endtime, fp):
     """
     Return starttime and endtime as UTCDateTimes
 
@@ -348,30 +349,69 @@ def _plot_command():
     """
     Command-line plotting interface
     """
-    parser = argparse.ArgumentParser(
-        description=__doc__)
-    parser.add_argument("infile", help="Input filename(s)")
-    parser.add_argument(
-        "starttime", default=None,
-        help="start time (ISO8601, or seconds from file start)")
-    parser.add_argument("endtime", default=None,
-                        help="end time (ISO8601, or seconds from start time)")
-    parser.add_argument("-t", "--obs_type", default='SPOBS2', help="obs type",
-                        choices=[s for s in chan_maps])
-    parser.add_argument("-n", "--network", default='XX', help="network code")
-    parser.add_argument("-s", "--station", default='SSSSS',
-                        help="station code")
+    obs_types = [s for s in chan_maps]
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("infiles", nargs="+", help="Input filename(s)")
+    parser.add_argument("-s", "--start", dest="starttime", metavar="TIME", default=0,
+        help="start time (ISO8601, or seconds from last file start) (default: %(default)s)")
+    parser.add_argument("-e", "--end", dest="endtime", metavar="TIME", default=3600.,
+        help="end time (ISO8601, or seconds from start time)  (default: %(default)s)")
+    parser.add_argument("-t", "--type", dest="obs_type", metavar='TYPE', default='SPOBS2',
+                        help="obs type.  Allowed choices are " + ', '.join(obs_types) + " (default: %(default)s)",
+                        choices=obs_types)
+    parser.add_argument("--net", dest="network", default='NN',
+                        help="network code (default: %(default)s)")
+    my_group = parser.add_mutually_exclusive_group(required=False)
+    my_group.add_argument("--sta", dest="station", default='STA',
+        help="station code.  A 2-digit counter will be appended if more than "
+             "one file is read. (default: %(default)s)")
+    my_group.add_argument("--sfilt", dest="station_filt",
+                        help="regex filter to find station name in filename "
+                             "(for example: for a file named "
+                             "'haha-MOVA-OBS1-blah.blah', "
+                             "'\-(.+)\-)' would extract 'MOVA-OBS1', "
+                             "'\-(.+?)\-)' would extract 'MOVA' "
+                             "and  '\-.+?\-(.+?)\-)' would extract 'OBS1'")
+    parser.add_argument("--chan", dest="channel", default='*',
+                        help="Plot only the given SEED channel/s (default: %(default)s)")
     args = parser.parse_args()
 
+    # Set/normalize start and end times
     endtime = _normalize_time_arg(args.endtime)
     if endtime == 0:
         endtime = 3600.
-    stream = read(args.infile,
-                  _normalize_time_arg(args.starttime),
-                  _normalize_time_arg(args.endtime),
-                  network=args.network,
-                  station=args.station,
-                  obs_type=args.obs_type)
+    if not args.starttime:  # set starttime to latest-starting file
+        args.starttime = UTCDateTime(0)
+        for infile in args.infiles:
+            s, e = get_data_timelimits(infile)
+            if s > args.starttime:
+                args.starttime = s
+    # Read file(s)
+    station_code=None
+    if args.station:
+        if len(args.infiles) == 1:
+            station_code = args.station
+    stream = Stream()
+    for (infile, i) in zip(args.infiles, range(len(args.infiles))):
+        if args.station_filt:
+            # print(re.search(args.station_filt, infile))
+            try:
+                station_code = re.search(args.station_filt, infile).group(1)
+            except Exception:
+                print('no station code found using re.search("{}", "{}"'.
+                      format(args.station_filt, infile))
+                station_code = None
+        if station_code is None:
+            station_code=f'STA{i:02d}'
+        s = read(infile,
+                 _normalize_time_arg(args.starttime),
+                 _normalize_time_arg(args.endtime),
+                 network=args.network,
+                 station=station_code,
+                 obs_type=args.obs_type)
+        s = s.select(channel=args.channel)
+        stream += s
+        station_code=None
     stream.plot(size=(800, 600), equal_scale=False, method='full')
 
 
@@ -383,7 +423,7 @@ def _to_mseed_command():
         description=__doc__)
     parser.add_argument("infile", help="Input filename(s)")
     parser.add_argument(
-        "starttime", default=None,
+        "starttime", default=0,
         help="start time (ISO8601, or seconds from file start)")
     parser.add_argument("endtime", default=None,
                         help="end time (ISO8601, or seconds from starttime)")
@@ -414,57 +454,14 @@ def _normalize_time_arg(a):
     """
     Convert time from string to float if it is numeric
     """
+    if isinstance(a, UTCDateTime):
+        return a
     try:
         temp = float(a)
     except ValueError:
         return a
     else:
         return temp
-
-
-# def _read_data_old(starttime, endtime, fp):
-#     """
-#     Return data
-#
-#     Reads block by block
-#
-#     :param starttime: start time
-#     :type  starttime: :class: `~obspy.UTCDateTime`
-#     :param endtime: end time
-#     :type  endtime: :class: `~obspy.UTCDateTime`
-#     :param fp: file pointer
-#     :type  fp: class `file`
-#     """
-#     starttime, endtime = _get_time_limits(starttime, endtime, fp)
-#     lcHeader = LCDiskHeader()
-#     block = LCDataBlock()
-#     lcHeader.readHeader(fp)
-#     samp_rate = lcHeader.realSampleRate
-#     n_start_block = _get_block_number(starttime, fp)
-#     n_end_block = _get_block_number(endtime, fp)
-#     n_chans = lcHeader.numberOfChannels
-#     stream = Stream()
-#
-#     block.seekBlock(fp, n_start_block)
-#     arrays = []
-#     stats = []
-#     # Stuff first record for each channel
-#     for i in range(0, n_chans):
-#         block.readBlock(fp)
-#         arrays.append(np.array(block.convertDataTo24BitValues()))
-#         stats.append({'sampling_rate': samp_rate,
-#                       'starttime': UTCDateTime(block.getDateTime())})
-#     # Read the rest
-#     for n_block in range(n_start_block+n_chans, n_end_block + n_chans):
-#         block.readBlock(fp)
-#         i_channel = block.muxChannel
-#         arrays[i_channel] = np.append(arrays[i_channel],
-#             np.array(block.convertDataTo24BitValues()))
-#     i = 0
-#     for array in arrays:
-#         stream.append(Trace(data=array.astype('int32'), header=stats[i]))
-#         i += 1
-#     return stream.slice(starttime, endtime)
 
 # ---------------------------------------------------------------------------
 # Run 'main' if the script is not imported as a module
