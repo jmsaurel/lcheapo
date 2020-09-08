@@ -33,6 +33,7 @@ setuptools.setup(
          'console_scripts': [
              'lcplot=lcheapo_obspy.lcread:_plot_command',
              'lc2ms_weak=lcheapo_obspy.lcread:_to_mseed_command',
+             'lc2SDS_weak=lcheapo_obspy.lcread:_to_SDS_command',
              'lctest=lcheapo_obspy.lctest:main',
              'lc_examples=lcheapo_obspy.lcputexamples:main'
          ]
