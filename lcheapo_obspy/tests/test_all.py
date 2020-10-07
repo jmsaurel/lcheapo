@@ -12,16 +12,16 @@ import unittest
 import filecmp
 import inspect
 import difflib
-import json
+# import json
 import glob
 
 from lcheapo_obspy.lcread import read as lcread
 from lcheapo_obspy.yaml_json import validate
 
 
-class TestLCHEAPOMethods(unittest.TestCase):
+class TestAllMethods(unittest.TestCase):
     """
-    Test suite for nordic io operations.
+    Test suite for lcheapo_obspy.
     """
     def setUp(self):
         self.path = os.path.dirname(os.path.abspath(inspect.getfile(
@@ -58,12 +58,19 @@ class TestLCHEAPOMethods(unittest.TestCase):
     def test_read(self):
         """
         test lcread
-        
-        Currently tests only for failure, should verify that what is read
-        corresponds to an expected waveform stream
+
+        Read in an lcheapo file, write it to miniSEED and compare to existing
+        miniSEED file
         """
-        lcread(os.path.join(self.examples_path,
-                            '20191107T14_SPOBS09_F02.raw.lch'))
+        infile = os.path.join(self.examples_path,
+                              '20191107T14_SPOBS09_F02.raw.lch')
+        compare_file = os.path.join(self.testing_path,
+                                    'XX.TEST.2019-11-07.mseed')
+        stream = lcread(infile, station='TEST', network='XX',
+                        obs_type='SPOBS2')
+        stream.write('test.mseed', 'MSEED', encoding='STEIM1', byteorder='<')
+        self.assertBinFilesEqual('test.mseed', compare_file)
+        os.remove('test.mseed')
 
     def test_lctest_validate(self):
         """validate lctest YAML files in _examples directory"""
@@ -93,7 +100,7 @@ class TestLCHEAPOMethods(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(TestLCHEAPOMethods, 'test')
+    return unittest.makeSuite(TestAllMethods, 'test')
 
 
 if __name__ == '__main__':

@@ -232,7 +232,7 @@ def _convert_time_bounds(starttime, endtime, fp):
         starttime = data_start
     if endtime > data_end:
         endtime = data_end
-    return starttime, endtime
+    return UTCDateTime(starttime), UTCDateTime(endtime)
 
 
 def _get_block_number(time, fp):
@@ -254,7 +254,7 @@ def _get_block_number(time, fp):
     starttime, _ = get_data_timelimits(fp)
     block_len_s = block.numberOfSamples / lcHeader.realSampleRate
     num_chans = lcHeader.numberOfChannels
-    record_offset = int((time-starttime) / block_len_s)
+    record_offset = int((UTCDateTime(time)-starttime) / block_len_s)
 
     return data_start_block + record_offset * num_chans
 
