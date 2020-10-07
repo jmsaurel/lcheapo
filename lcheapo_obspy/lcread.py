@@ -40,9 +40,9 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
     :param endtime: End time as a ISO8601 string, a UTCDateTime object,
         or a number.  In the latter case, is seconds after starttime
     :type  network: str
-    :param network: Network code (up to two characters)
+    :param network: Set network code (up to two characters)
     :type  station: str
-    :param station: FDSN station name (up to five characters)
+    :param station: Set FDSN station name (up to five characters)
     :type  obs_type: str
     :param obs_type: OBS type (must match a key in chan_maps)
     :return: stream
@@ -480,6 +480,8 @@ def _to_SDS_command():
     parser.add_argument(
         "--station", default='SSSSS', help="station code for this instrument")
     parser.add_argument(
+        "--network", default='XX', help="network code for this instrument")
+    parser.add_argument(
         "-s", "--start_times", nargs='+', type=UTCDateTime,
         metavar=("REF_START","INST_START"),
         help="Start datetimes for the reference (usually  GPS) "
@@ -529,7 +531,7 @@ def _to_SDS_command():
         stream = read(args.infile,
                       starttime=stime + inst_offset,
                       endtime=stime + inst_offset + 86400,
-                      network='XX',
+                      network=args.network,
                       station=args.station,
                       obs_type=args.obs_type)
 
