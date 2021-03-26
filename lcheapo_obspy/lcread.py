@@ -20,15 +20,16 @@ from obspy.core import UTCDateTime, Stream, Trace
 from obspy import read_inventory
 
 from lcheapo.lcheapo import (LCDataBlock, LCDiskHeader)
+from .chan_maps import chan_maps
 
-chan_maps = {'SPOBS1': ['SH3:00', 'BDH:00'],
-             'SPOBS2': ['BDH:00', 'SH2:00', 'SH1:00', 'SH3:00'],
-             'BBOBS1': ['BH2:00', 'BH1:00', 'BHZ:00', 'BDH:00'],
-             'HYDROCT': ['BDH:00', 'BDH:01', 'BDH:02', 'BDH:03']}
-
+# chan_maps = {'SPOBS1': ['SH3:00', 'BDH:00'],
+#              'SPOBS2': ['BDH:00', 'SH2:00', 'SH1:00', 'SH3:00'],
+#              'BBOBS1': ['BH2:00', 'BH1:00', 'BHZ:00', 'BDH:00'],
+#              'HYDROCT': ['BDH:00', 'BDH:01', 'BDH:02', 'BDH:03']}
+# 
 
 def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
-         obs_type=None):
+         obs_type=None, verbose=False):
     """
     Read LCHEAPO data into an obspy stream
 
@@ -45,6 +46,8 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
     :param station: Set FDSN station name (up to five characters)
     :type  obs_type: str
     :param obs_type: OBS type (must match a key in chan_maps)
+    :param verbose: print out info about first and last read data
+    :type verbose: bool
     :return: stream
     :rtype:  :class:`~obspy.core.stream.Stream`
 
@@ -67,7 +70,7 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
         obs_type = 'SPOBS2'
 
     with open(filename, 'rb') as fp:
-        data = _read_data(starttime, endtime, fp)
+        data = _read_data(starttime, endtime, fp, verbose)
     data = _stuff_info(data, network, station, obs_type)
     return data
 
@@ -79,6 +82,7 @@ def get_data_timelimits(lcheapo_object):
     :param lcheapo_object: Filename or open file-like object that contains the
         binary Mini-SEED data.  Any object that provides a read() method will
         be considered a file-like object.
+    :returns: startime, endtime (UTCDateTime)
     """
 
     if hasattr(lcheapo_object, "read"):
@@ -105,7 +109,7 @@ def get_data_timelimits(lcheapo_object):
     return UTCDateTime(starttime), UTCDateTime(endtime)
 
 
-def _read_data(starttime, endtime, fp):
+def _read_data(starttime, endtime, fp, verbose=False):
     """
     Return data
 
@@ -138,7 +142,7 @@ def _read_data(starttime, endtime, fp):
     dt = np.dtype('b')
     all = np.frombuffer(buf, dtype=dt)
     a = np.reshape(all, (read_blocks, 512))  # keep data contiguous
-    # The following seems to take the same time ...
+    # The following takes the same amount of time ...
     # a = all.view()
     # a.shape = (read_blocks,512)
     headers = a[:, :14]
@@ -149,17 +153,20 @@ def _read_data(starttime, endtime, fp):
     seconds_per_block = samples_per_block / sample_rate
     last_time = _get_header_time(headers[-n_chans, :])
     first_time = _get_header_time(headers[0, :])
+    if verbose:
+        print(f'First read block = {n_start_block:d}, time = {first_time}')
+        print(f'Last read block =  {n_end_block:d}, time = {last_time}')
     timerange = last_time - first_time
     expected_timerange = (chan_blocks - 1) * seconds_per_block
     offset = timerange - expected_timerange
     if offset > 0.1/sample_rate:
-        warnings.warn(f"Last block is late!: {offset:g} seconds, "
-                      f"{offset*sample_rate:g} samples, "
-                      f"{offset/seconds_per_block:g} blocks")
+        warnings.warn(f"Last block late by {offset:g} seconds! "
+                      f"({offset*sample_rate:g} samples, "
+                      f"{offset/seconds_per_block:g} blocks)")
     elif offset < -0.1/sample_rate:
-        warnings.warn(f"Last block is early!: {-offset:g} seconds, "
-                      f"{-offset*sample_rate:g} samples, "
-                      f"{-offset/seconds_per_block:g} blocks")
+        warnings.warn(f"Last block early by {-offset:g} seconds! "
+                      f"({-offset*sample_rate:g} samples, "
+                      f"{-offset/seconds_per_block:g} blocks)")
     stats = {'sampling_rate': sample_rate, 'starttime': first_time}
 
     # Extract channels
@@ -180,12 +187,17 @@ def _get_header_time(header):
     """
     Return time from an LCHEAPO header
 
-    header = 14-byte LCHEAPO HEADER
+    :param header: 14-byte LCHEAPO HEADER
     """
     (msec, second, minute, hour, day, month, year) = struct.unpack(
         '>HBBBBBB', header.data[:8])
-    return UTCDateTime(year + 2000, month, day, hour, minute, second +
+    try:
+        return UTCDateTime(year + 2000, month, day, hour, minute, second +
                        msec/1000)
+    except Exception as err:
+        raise ValueError(
+            '{}. header fields= {}, {}, {}, {}, {}, {}, {}'
+            .format(err, year, month, day, hour, minute, second, msec))
 
 
 def _get_header_nsamples(header):
@@ -202,14 +214,15 @@ def _convert_time_bounds(starttime, endtime, fp):
     """
     Return starttime and endtime as UTCDateTimes
 
-    startime = UTCDateTime: no change
-             = string: convert to UTCDateTime
-             = numeric: interpret as seconds from file start
-    endtime = UTCDateTime: no change
-            = string: convert to UTCDateTime
-            = numeric: interpret as seconds starttime
-
     Also makes sure that starttime and endtime are within the data bounds
+    :param startime: UTCDateTime: no change
+                     string: convert to UTCDateTime
+                     numeric: interpret as seconds from file start
+    :param endtime: UTCDateTime: no change
+                    string: convert to UTCDateTime
+                    numeric: interpret as seconds starttime
+    :param fp: file pointer (for checking if the times are within the
+        data bounds)
     """
     data_start, data_end = get_data_timelimits(fp)
     if not starttime:
@@ -354,37 +367,58 @@ def _plot_command():
     Command-line plotting interface
     """
     obs_types = [s for s in chan_maps]
-    parser = argparse.ArgumentParser(description=__doc__)
+    epilog = "--sfilt returns the first parenthetised subgroup, using \n"
+    epilog += "  python's re.search().  Some useful codes are: \n"
+    epilog += "   '.': matches any character\n"
+    epilog += "   '+': matches 1 or more repetitions of the preceding RE\n"
+    epilog += "   '?': matches 0 or 1 repetitions of the preceding RE\n"
+    epilog += "  '+?': like +, but non-greedy (don't match as many as possible)\n"
+    epilog += "   '\\': escapes special characters, like '*', '-' and '/')\n"
+    epilog += "  '()': delimit the subgroup to return\n\n"
+    epilog += " Some examples are: \n"
+    epilog += "    FILENAME                 |   PATTERN      |     RESULT\n"
+    epilog += "    =========================+================+=============\n"
+    epilog += "    haha-MOVA-OBS1-blah.lch | '\-(.+)\-'     | MOVA-OBS1 \n"
+    epilog += "    haha-MOVA-OBS1-blah.lch | '\(-.+)\-.+\-' | MOVA \n"
+    epilog += "    haha-MOVA-OBS1-blah.lch | '\-.+\-(.+)\-' | OBS1 \n"
+    epilog += "    MOVA/haha.raw.lch       | '([^\/]+)'     | MOVA \n"
+
+    parser = argparse.ArgumentParser(
+        description=__doc__, epilog=epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("infiles", nargs="+", help="Input filename(s)")
-    parser.add_argument(
-        "-s", "--start", dest="starttime", metavar="TIME", default=0,
-        help="start time (ISO8601, or seconds from last file start) "
-             "(default: %(default)s)")
-    parser.add_argument(
-        "-e", "--end", dest="endtime", metavar="TIME", default=3600.,
-        help="end time (ISO8601, or seconds from start time)  (default: "
-             "%(default)s)")
-    parser.add_argument(
-        "-t", "--type", dest="obs_type", metavar='TYPE', default='SPOBS2',
-        help="obs type.  Allowed choices are " + ', '.join(obs_types)
-             + " (default: %(default)s)",
-        choices=obs_types)
+    parser.add_argument("-s", "--start", dest="starttime", metavar="TIME",
+                        default=0,
+                        help="start time (ISO8601, or seconds after last file "
+                             "start) (default: %(default)s)")
+    parser.add_argument("-e", "--end",
+                        dest="endtime", metavar="TIME", default=3600.,
+                        help="end time (ISO8601, or seconds from start time) "
+                        "(default: %(default)s)")
+    parser.add_argument("-t", "--type", choices=obs_types,
+                        dest="obs_type", metavar='TYPE', default='SPOBS2',
+                        help="obs type.  Allowed choices are " +
+                             ", ".join(obs_types) +
+                             " (default: %(default)s)")
     parser.add_argument("--net", dest="network", default='NN',
                         help="network code (default: %(default)s)")
-    my_group = parser.add_mutually_exclusive_group(required=False)
-    my_group.add_argument(
-        "--sta", dest="station", default='STA',
-        help="station code.  A 2-digit counter will be appended if more than "
-             "one file is read. (default: %(default)s)")
-    my_group.add_argument(
-        "--sfilt", dest="station_filt",
-        help="regex filter to find station name in filename (for example: "
-             "for a file named 'haha-MOVA-OBS1-blah.blah', '\-(.+)\-)' "
-             "would extract 'MOVA-OBS1', '\-(.+?)\-)' would extract 'MOVA' "
-             "and  '\-.+?\-(.+?)\-)' would extract 'OBS1'")
     parser.add_argument("--chan", dest="channel", default='*',
                         help="Plot only the given SEED channel/s (default: "
                              "%(default)s)")
+    parser.add_argument("--equal_scale", action="store_true",
+                        help="Force all traces equal y scale")
+    parser.add_argument('-v', "--verbose",
+                        dest="verbose", action="store_true",
+                        help="Print information about the first and last "
+                             "read blocks")
+    my_group = parser.add_mutually_exclusive_group(required=False)
+    my_group.add_argument("--sta", dest="station", default='STA',
+                          help="station code.  A 2-digit counter will be "
+                               "appended if more than one file is read. "
+                               "(default: %(default)s)")
+    my_group.add_argument("--sfilt", dest="station_filt",
+                          help="regex filter to find station name in filename "
+                               "(see examples below)")
     args = parser.parse_args()
 
     # Set/normalize start and end times
@@ -419,138 +453,13 @@ def _plot_command():
                  _normalize_time_arg(args.endtime),
                  network=args.network,
                  station=station_code,
-                 obs_type=args.obs_type)
+                 obs_type=args.obs_type,
+                 verbose=args.verbose)
         s = s.select(channel=args.channel)
         stream += s
         station_code = None
-    stream.plot(size=(800, 600), equal_scale=False, method='full')
+    stream.plot(size=(800, 600), equal_scale=args.equal_scale, method='full')
 
-
-def _to_mseed_command():
-    """
-    Command-line conversion to miniSEED
-    """
-    parser = argparse.ArgumentParser(
-        description=__doc__)
-    parser.add_argument("infile", help="Input filename(s)")
-    parser.add_argument(
-        "starttime", default=0,
-        help="start time (ISO8601, or seconds from file start)")
-    parser.add_argument("endtime", default=None,
-                        help="end time (ISO8601, or seconds from starttime)")
-    parser.add_argument("-g", "--granularity", type=int, default=86400,
-                        help="granularity for reading (seconds)")
-    parser.add_argument("-t", "--obs_type", default='SPOBS2', help="obs type",
-                        choices=[s for s in chan_maps])
-    parser.add_argument("-n", "--network", default='XX', help="network code")
-    parser.add_argument("--station", default='SSSSS',
-                        help="station code")
-    args = parser.parse_args()
-
-    stream = read(args.infile,
-                  _normalize_time_arg(args.starttime),
-                  _normalize_time_arg(args.endtime),
-                  network=args.network,
-                  station=args.station,
-                  obs_type=args.obs_type)
-
-    for tr in stream:
-        fname = tr.stats.starttime.strftime('%Y-%m-%dT%H%M%S') +\
-                "{}.{}.{}.{}.mseed".format(tr.stats.network, tr.stats.station,
-                                           tr.stats.channel, tr.stats.location)
-        tr.write(fname, format='MSEED', encoding=3, reclen=4096)
-
-
-def _to_SDS_command():
-    """
-    Command-line conversion to SeisComp Data Structure
-
-    Simplified drift correction: only at beginning of record, no offset
-    information put in header
-    """
-    print(_to_SDS_command.__doc__)
-    parser = argparse.ArgumentParser(
-        description=inspect.cleandoc(_to_SDS_command.__doc__),
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("infile", help="Input filename(s)")
-    parser.add_argument(
-        "-t", "--obs_type", default='SPOBS2',
-        help="obs type.  This controls the channel and location codes",
-        choices=[s for s in chan_maps])
-    parser.add_argument(
-        "--station", default='SSSSS', help="station code for this instrument")
-    parser.add_argument(
-        "--network", default='XX', help="network code for this instrument")
-    parser.add_argument(
-        "-s", "--start_times", nargs='+', type=UTCDateTime,
-        metavar=("REF_START","INST_START"),
-        help="Start datetimes for the reference (usually  GPS) "
-             "and instrument.  If only one value is provided, it will "
-             "be used for both")
-    parser.add_argument(
-        "-e", "--end_times", nargs=2, type=UTCDateTime,
-        metavar=("REF_END","INST_END"),
-        help="End datetimes for the reference and instrument")
-    parser.add_argument(
-        "-v", "--verbose", action='store_true',
-        help="verbose output")
-    args = parser.parse_args()
-
-    lc_start, lc_end = get_data_timelimits(args.infile)
-
-    if args.start_times and args.end_times:
-        ref_start = args.start_times[0]
-        if len(args.start_times) > 1:
-            inst_start = args.start_times[1]
-        else:
-            inst_start = ref_start
-        ref_end, inst_end = args.end_times
-        if inst_start == 0:
-            inst_start = ref_start
-        inst_start_offset = inst_start - ref_start
-        inst_drift = ((inst_end - ref_end) - inst_start_offset)\
-            / (ref_end - inst_start)
-        print('instrument start offset = {:g}s, drift rate = {:.4g}'.format(
-            inst_start_offset, inst_drift))
-        quality_flag = 'D'
-    else:
-        ref_start, inst_start = lc_start, lc_start
-        inst_start_offset = 0
-        inst_drift = 0
-        warnings.warn('Could not calculate clock drift, assuming zero!')
-        quality_flag = 'Q'
-
-    lc_start_day = lc_start.replace(hour=0, minute=0, second=0, microsecond=0)
-    lc_end_day = lc_end.replace(hour=0, minute=0, second=0, microsecond=0)
-    stime = lc_start_day
-    while stime <= lc_end_day:
-        inst_offset = inst_start_offset + inst_drift * (stime - ref_start)
-        if args.verbose:
-            print('{}: inst_offset = {:.3f}s'.format(
-                stime.strftime('%Y-%m-%d'), inst_offset))
-        stream = read(args.infile,
-                      starttime=stime + inst_offset,
-                      endtime=stime + inst_offset + 86400,
-                      network=args.network,
-                      station=args.station,
-                      obs_type=args.obs_type)
-
-        for tr in stream:
-            s = tr.stats
-            # Correct drift
-            s.starttime -= inst_offset
-            # s.mseed['dataquality'] = quality_flag
-            
-            # Write file
-            dirname = 'SDS/{}/{}/{}/{}.D'.format(
-                stime.year, s.network, s.station, s.channel)
-            fname = '{}.{}.{}.{}.D.{}.{}'.format(
-                s.network, s.station, s.location, s.channel,
-                stime.year, stime.julday)
-            os.makedirs(dirname, exist_ok=True)
-            tr.write(os.path.join(dirname, fname),
-                     format='MSEED', encoding=3, reclen=4096)
-        stime += 86400
 
 
 def _normalize_time_arg(a):

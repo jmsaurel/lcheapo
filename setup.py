@@ -24,16 +24,16 @@ setuptools.setup(
     # include_package_data=True,
     install_requires=[
           'obspy>=1.1',
-          'pyyaml>3.0'
+          'pyyaml>5.0'
           'jsonschema>=2.6',
           'jsonref>=0.2',
+          'progress>=1.5',
           'lcheapo>=0.7'
       ],
     entry_points={
          'console_scripts': [
              'lcplot=lcheapo_obspy.lcread:_plot_command',
-             'lc2ms_weak=lcheapo_obspy.lcread:_to_mseed_command',
-             'lc2SDS_weak=lcheapo_obspy.lcread:_to_SDS_command',
+             'lc2SDS_weak=lcheapo_obspy.lc2SDS:lc2SDS',
              'lctest=lcheapo_obspy.lctest:main',
              'lc_examples=lcheapo_obspy.lcputexamples:main'
          ]
