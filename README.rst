@@ -12,10 +12,6 @@ Command-line programs:
 
 - lcplot: plot an LCHEAPO file
 - lctest: plot LCHEAPO tests
-- lc2ms_weak: converts LCHEAPO file to miniseed (basic, NO drift correction)
-- lc2SDS_weak: converts LCHEAPO file to SeisComp Data Structure (basic drift correction)
+- lc2SDS_weak: converts LCHEAPO file to SeisComp Data Structure, with
+  basic drift correction
 - lc_examples: create a directory with examples of lcplot and lctest
-
-
-Use `reStructuredText
-<http://docutils.sourceforge.net/rst.html>`_ to modify this file.

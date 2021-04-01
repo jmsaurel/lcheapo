@@ -136,7 +136,7 @@ def lc2SDS():
 
                 # Write file
                 dirname = Path(args.out_dir) / 'SDS' / str(stime.year) /\
-                    s.network / s.station / s.channel
+                    s.network / s.station / f'{s.channel}.D'
                 fname = '{}.{}.{}.{}.D.{}.{:03d}'.format(
                     s.network, s.station, s.location, s.channel,
                     stime.year, stime.julday)
