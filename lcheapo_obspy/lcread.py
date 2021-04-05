@@ -22,11 +22,6 @@ from obspy import read_inventory
 from lcheapo.lcheapo import (LCDataBlock, LCDiskHeader)
 from .chan_maps import chan_maps
 
-# chan_maps = {'SPOBS1': ['SH3:00', 'BDH:00'],
-#              'SPOBS2': ['BDH:00', 'SH2:00', 'SH1:00', 'SH3:00'],
-#              'BBOBS1': ['BH2:00', 'BH1:00', 'BHZ:00', 'BDH:00'],
-#              'HYDROCT': ['BDH:00', 'BDH:01', 'BDH:02', 'BDH:03']}
-# 
 
 def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
          obs_type=None, verbose=False):
@@ -192,8 +187,8 @@ def _get_header_time(header):
     (msec, second, minute, hour, day, month, year) = struct.unpack(
         '>HBBBBBB', header.data[:8])
     try:
-        return UTCDateTime(year + 2000, month, day, hour, minute, second +
-                       msec/1000)
+        return UTCDateTime(year + 2000, month, day, hour, minute,
+                           second + msec/1000)
     except Exception as err:
         raise ValueError(
             '{}. header fields= {}, {}, {}, {}, {}, {}, {}'
@@ -290,19 +285,78 @@ def _stuff_info(stream, network, station, obs_type):
     """
     assert obs_type in chan_maps
     chan_map = chan_maps[obs_type]
-    chan_map_list = list(chan_map)
-    for trace in stream:
+    # chan_map_list = list(chan_map)
+    for trace, chan_loc in zip(stream, chan_map):
         trace.stats.network = network
         trace.stats.station = station
-        if len(chan_map) >= 1:
-            chan_loc = chan_map_list[0].split(':')
-            trace.stats.channel = chan_loc[0]
-            if len(chan_loc) > 1:
-                trace.stats.location = chan_loc[1]
-            chan_map_list.pop(0)
+        sps = trace.stats.sampling_rate
+        # if len(chan_map) >= 1:
+        chan, loc = chan_loc.split(':')
+        trace.stats.channel = band_code_sps(chan[0], sps) + chan[1:3]
+        if len(loc) > 1:
+            trace.stats.location = loc
         trace.stats.response = _load_response(obs_type, trace.stats.channel,
                                               trace.stats.starttime)
     return stream
+
+
+def band_code_sps(band_code, sps):
+    """
+    Verify/correct a channel's band code for a given sampling rate.
+    Band codes are from
+    http://docs.fdsn.org/projects/source-identifiers/en/v1.0/channel-codes.html
+
+    :param band_code: SEED channel code
+    :type  band_code: str
+    :param sps: sampling rate
+
+    :returns: SEED channel band code corresponding to sampling rate
+    :rtype: str
+    """
+    # print(f"{band_code=}, {sps=}")
+    band_codes_SP = 'GDES'
+    band_codes_LP = 'FCHBMLVUWRPTQ'
+    if sps > 5000:
+        return 'J'
+    if band_code in band_codes_SP:
+        if sps >= 1000:
+            return "G"
+        elif sps >= 250:
+            return "D"
+        elif sps >= 80:
+            return "E"
+        elif sps >= 10:
+            return "S"
+        else:
+            raise NameError("You should not have short period data at < 10 sps")
+    elif band_code in band_codes_LP:
+        if sps >= 1000:
+            return "F"
+        elif sps >= 250:
+            return "C"
+        elif sps >= 80:
+            return "H"
+        elif sps >= 10:
+            return "B"
+        elif sps > 1:
+            return "M"
+        elif sps == 1:
+            return "L"
+        elif sps >= 0.1:
+            return "V"
+        elif sps >= 0.01:
+            return "U"
+        elif sps >= 0.001:
+            return "W"
+        elif sps >= 0.0001:
+            return "R"
+        elif sps >= 0.00001:
+            return "P"
+        elif sps >= 0.000001:
+            return "T"
+        else:
+            return "Q"
+    raise NameError(f'Unknown band code "{band_code}"')
 
 
 def _load_response(obs_type, channel, start_time):
@@ -459,7 +513,6 @@ def _plot_command():
         stream += s
         station_code = None
     stream.plot(size=(800, 600), equal_scale=args.equal_scale, method='full')
-
 
 
 def _normalize_time_arg(a):

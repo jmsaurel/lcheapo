@@ -3,9 +3,9 @@
 """
 Functions to test the lcheapo functions
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
+# from __future__ import (absolute_import, division, print_function,
+#                         unicode_literals)
+# from future.builtins import *  # NOQA @UnusedWildImport
 
 import os
 import unittest
@@ -15,7 +15,7 @@ import difflib
 # import json
 import glob
 
-from lcheapo_obspy.lcread import read as lcread
+from lcheapo_obspy.lcread import read as lcread, band_code_sps
 from lcheapo_obspy.yaml_json import validate
 
 
@@ -62,20 +62,45 @@ class TestAllMethods(unittest.TestCase):
         Read in an lcheapo file, write it to miniSEED and compare to existing
         miniSEED file
         """
+        test_fname = 'XX.TEST.2019-11-07.mseed'
         infile = os.path.join(self.examples_path,
                               '20191107T14_SPOBS09_F02.raw.lch')
-        compare_file = os.path.join(self.testing_path,
-                                    'XX.TEST.2019-11-07.mseed')
+        compare_file = os.path.join(self.testing_path, test_fname)
         stream = lcread(infile, station='TEST', network='XX',
                         obs_type='SPOBS2')
-        stream.write('test.mseed', 'MSEED', encoding='STEIM1', byteorder='<')
-        self.assertBinFilesEqual('test.mseed', compare_file)
-        os.remove('test.mseed')
+        stream.write(test_fname, 'MSEED', encoding='STEIM1', byteorder='<')
+        self.assertBinFilesEqual(test_fname, compare_file)
+        os.remove(test_fname)
 
     def test_lctest_validate(self):
         """validate lctest YAML files in _examples directory"""
         for f in glob.glob(os.path.join(self.examples_path, '*.yaml')):
             validate(f, quiet=True)
+
+    def test_band_code_sps(self):
+        """validate lcread band_code_sps() function"""
+        self.assertEqual("F", band_code_sps("B", 1000))
+        self.assertEqual("G", band_code_sps("S", 1000))
+        self.assertEqual("C", band_code_sps("B", 500))
+        self.assertEqual("D", band_code_sps("S", 500))
+        self.assertEqual("C", band_code_sps("B", 250))
+        self.assertEqual("D", band_code_sps("S", 250))
+        self.assertEqual("H", band_code_sps("B", 200))
+        self.assertEqual("E", band_code_sps("S", 200))
+        self.assertEqual("H", band_code_sps("B", 100))
+        self.assertEqual("E", band_code_sps("S", 100))
+        self.assertEqual("B", band_code_sps("B", 50))
+        self.assertEqual("S", band_code_sps("S", 50))
+        self.assertEqual("B", band_code_sps("B", 10))
+        self.assertEqual("S", band_code_sps("S", 10))
+        self.assertEqual("L", band_code_sps("B", 1))
+        # Try alternative input band code
+        self.assertEqual("B", band_code_sps("C", 50))
+        self.assertEqual("S", band_code_sps("D", 50))
+        # Test invalid input band code
+        self.assertRaises(NameError, band_code_sps, *["N", 100])
+        # Test short period band code for < 10 sps
+        self.assertRaises(NameError, band_code_sps, *["S", 9])
 
     # TESTS TO ADD:
     # def test_lcplot(self):
