@@ -12,3 +12,4 @@ First distributed
 - 0.4.4: Reorganize lc2SDS, add sdpchain compatibility
 - 0.4.5: Fixed an error in SDS channel directory names
 - 0.4.6: Puts correct band codes for given sampling rate
+- 0.4.7: Added leapsecond handling to lc2SDS
