@@ -23,19 +23,17 @@ from .chan_maps import chan_maps
 from .lcread import read as lcread, get_data_timelimits
 from .version import __version__
 
-# chan_maps = {'SPOBS1': ['SH3:00', 'BDH:00'],
-#              'SPOBS2': ['BDH:00', 'SH2:00', 'SH1:00', 'SH3:00'],
-#              'BBOBS1': ['BH2:00', 'BH1:00', 'BHZ:00', 'BDH:00'],
-#              'HYDROCT': ['BDH:00', 'BDH:01', 'BDH:02', 'BDH:03']}
-
 
 def lc2SDS():
     """
     Convert fixed LCHEAPO data to SeisComp Data Structure
 
-    SIMPLE drift correction: only at beginning of each daily file, no
-    offset information put in header, no modification of data quality field.
-    Writes to directory SDS in the output directory.
+    SIMPLE drift and leapsecond correction:
+        - offset is constant within each daily file
+        - offset information is not written in header
+        - data quality field is not modified
+        - leapsecond flag is not raised (causes apparent 1-s gap/overlap).
+    Writes to a directory named SDS/ in the output directory.
     """
     print(lc2SDS.__doc__)
     parser = argparse.ArgumentParser(
@@ -61,6 +59,14 @@ def lc2SDS():
     parser.add_argument("-e", "--end_times", nargs=2, type=UTCDateTime,
                         metavar=("REF_END", "INST_END"),
                         help="End datetimes for the reference and instrument")
+    parser.add_argument("--leapsecond_times", nargs='+',
+                        help="leapsecond times")
+    parser.add_argument("--leapsecond_types", default='+',
+                        help="'+' for extra second, '-' for removed second. "
+                             "If there is one character it is applied to all "
+                             "leapseconds, if there is more than one the "
+                             "length of the string must match "
+                             "the number of leapsecond_times")
     parser.add_argument("-d", dest="base_dir", metavar="BASE_DIR",
                         default='.', help="base directory for files")
     parser.add_argument("-i", dest="in_dir", metavar="IN_DIR", default='.',
@@ -71,7 +77,15 @@ def lc2SDS():
                              "or relative to base_dir)")
     parser.add_argument("-v", "--verbose", action='store_true',
                         help="verbose output")
+    parser.add_argument("--version", action='store_true',
+                        help="Print version number and quit")
     args = parser.parse_args()
+    if args.version is True:
+        print(f"Version {__version__}")
+        sys.exit(0)
+        
+    args.leapsecond_times, args.leapsecond_types = _adjust_leapseconds(
+        args.leapsecond_times, args.leapsecond_types)
     args.in_dir, args.out_dir = sdpchain.setup_paths(args.base_dir,
                                                      args.in_dir,
                                                      args.out_dir)
@@ -130,6 +144,9 @@ def lc2SDS():
 
             for tr in stream:
                 s = tr.stats
+                # Correct leapsecond
+                s.starttime += _leap_correct(stime, args.leapsecond_times,
+                                             args.leapsecond_types)
                 # Correct drift
                 s.starttime -= inst_offset
                 # s.mseed['dataquality'] = quality_flag
@@ -164,43 +181,60 @@ def lc2SDS():
     sys.exit(return_code)
 
 
-# def _to_mseed_command():
-#     """
-#     Command-line conversion to miniSEED
-#     """
-#     parser = argparse.ArgumentParser(
-#         description=__doc__)
-#     parser.add_argument("infile", help="Input filename(s)")
-#     parser.add_argument(
-#         "starttime", default=0,
-#         help="start time (ISO8601, or seconds from file start)")
-#     parser.add_argument("endtime", default=None,
-#                         help="end time (ISO8601, or secs from starttime)")
-#     parser.add_argument("-g", "--granularity", type=int, default=86400,
-#                         help="granularity for reading (seconds)")
-#     parser.add_argument("-t", "--obs_type", default='SPOBS2',
-#                         help="obs type",
-#                         choices=[s for s in chan_maps])
-#     parser.add_argument("-n", "--network", default='XX', help="network code")
-#     parser.add_argument("--station", default='SSSSS',
-#                         help="station code")
-#     args = parser.parse_args()
-#
-#     stream = read(args.infile,
-#                   _normalize_time_arg(args.starttime),
-#                   _normalize_time_arg(args.endtime),
-#                   network=args.network,
-#                   station=args.station,
-#                   obs_type=args.obs_type)
-#
-#     for tr in stream:
-#         fname = tr.stats.starttime.strftime('%Y-%m-%dT%H%M%S') +\
-#                 "{}.{}.{}.{}.mseed".format(tr.stats.network,
-#                                            tr.stats.station,
-#                                            tr.stats.channel,
-#                                            tr.stats.location)
-#         tr.write(fname, format='MSEED', encoding=3, reclen=4096)
+def _adjust_leapseconds(ls_times, ls_types):
+    """
+    Adjust leapsecond arguments
+    
+    Converts times to UTCDateTime and makes sure there is one type
+    for each time
+    :param ls_times: list of strings
+    :param ls_types: str
+    :returns: ls_times, ls_types
+    """
+    if len(ls_times) > 0:
+        # Quick and stupid way to avoid second=60 problem
+        new_times = []
+        for t in ls_times:
+            if t[-2:] == '60':
+                t=t[:-2] + '59'
+            new_times.append(UTCDateTime(t))
+        if not len(new_times) == len(ls_types):
+            if len(ls_types) == 1:
+                ls_types = ls_types * len(new_times)
+            else:
+                raise IndexError(f"len(ls_times) ({len(new_times)}) "
+                                 "incompatible with "
+                                 f"len(ls_types) {len(ls_types)}")
+        for tp in ls_types:
+            if tp not in '+-':
+                raise ValueError(f"'{tp}' is not a valid leapsecond type")
+    return new_times, ls_types
 
+                            
+def _leap_correct(starttime, ls_times, ls_types):
+    """
+    Return leap-second correction for a given time
+    :param starttime: time at start of current data segment
+    :type starttime: UTCDateTime
+    :param ls_times: list of leap second times.
+    :param ls_types: str of leap second types ('+' or '-').  If len(ls_times)
+        is not 0, ls_types and ls_times must have same length
+    :returns: seconds to add to current OBS-recorded time
+    """
+    if len(ls_times) == 0:
+        return 0
+    correct = 0
+    for ls_time, ls_type in zip(ls_times, ls_types):
+        if starttime > ls_time - 1: # avoid overlap with leap seconds
+            if ls_type=='+':
+                correct -= 1  # Everything after an added second is one earlier
+            elif ls_type=='-':
+                correct += 1
+            else:
+                raise ValueError(f"'{ls_type}' is not a valid leapsecond type")
+    return correct
+        
+        
 # ---------------------------------------------------------------------------
 # Run 'main' if the script is not imported as a module
 # ---------------------------------------------------------------------------

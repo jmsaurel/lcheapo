@@ -17,6 +17,8 @@ import glob
 
 from lcheapo_obspy.lcread import read as lcread, band_code_sps
 from lcheapo_obspy.yaml_json import validate
+from lcheapo_obspy.lc2SDS import _adjust_leapseconds, _leap_correct
+from obspy.core import UTCDateTime
 
 
 class TestAllMethods(unittest.TestCase):
@@ -102,6 +104,20 @@ class TestAllMethods(unittest.TestCase):
         # Test short period band code for < 10 sps
         self.assertRaises(NameError, band_code_sps, *["S", 9])
 
+    def test_leap_seconds(self):
+        """ test leapsecond routines in lc2SDS """
+        lstimes = ["2020-12-31:23:59:60", "2021-06-30T23:59:58"]
+        self.assertRaises(IndexError, _adjust_leapseconds, *[lstimes, '+++'])
+        self.assertRaises(ValueError, _adjust_leapseconds, *[lstimes, '+p'])
+        lstm, lstp = _adjust_leapseconds(lstimes, '+')
+        self.assertEqual(lstp, '++')
+        self.assertIsInstance(lstm[0], UTCDateTime)
+        lstm, lstp = _adjust_leapseconds(lstimes, '+-')
+        self.assertEqual(_leap_correct(UTCDateTime('2020-12-31'), lstm, lstp), 0)
+        self.assertEqual(_leap_correct(UTCDateTime('2021-01-01'), lstm, lstp), -1)
+        self.assertEqual(_leap_correct(UTCDateTime('2021-04-01'), lstm, lstp), -1)
+        self.assertEqual(_leap_correct(UTCDateTime('2021-07-01'), lstm, lstp), 0)
+        
     # TESTS TO ADD:
     # def test_lcplot(self):
     #   """
