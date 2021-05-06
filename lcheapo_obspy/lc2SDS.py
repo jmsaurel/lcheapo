@@ -84,9 +84,12 @@ def lc2SDS():
     if args.version is True:
         print(f"Version {__version__}")
         sys.exit(0)
-        
-    args.start_times = [UTCDateTime(x) for x in args.start_times]
-    args.end_times = [UTCDateTime(x) for x in args.end_times]
+    
+    # ADJUST INPUT PARAMETERS
+    if args.start_times is not None:
+        args.start_times = [UTCDateTime(x) for x in args.start_times]
+    if args.end_times is not None:
+        args.end_times = [UTCDateTime(x) for x in args.end_times]
     ls_times, ls_types = _adjust_leapseconds(args.leapsecond_times,
                                              args.leapsecond_types)
     args.in_dir, args.out_dir = sdpchain.setup_paths(args.base_dir,
