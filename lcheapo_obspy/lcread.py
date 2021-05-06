@@ -27,11 +27,13 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
          obs_type=None, verbose=False):
     """
     Read LCHEAPO data into an obspy stream
+    
+    To avoid overlaps, starttime is inclusive and endtime is exclusive
 
     :param filename: LCHEAPO filename
     :type  filename: str
     :param starttime: Start time as a ISO8601 string, a UTCDateTime object,
-        or a number.  In the latter case, is seconds since the file start
+        or a number.  The latter is interpreted as seconds since the file start
     :type  endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: End time as a ISO8601 string, a UTCDateTime object,
         or a number.  In the latter case, is seconds after starttime
@@ -106,15 +108,20 @@ def get_data_timelimits(lcheapo_object):
 
 def _read_data(starttime, endtime, fp, verbose=False):
     """
-    Return data
+    Return data.
+    
+    Returns from the start of the block containing starttime to the end of the 
+    block containing endtime
 
-    Reads all blocks at once and extracts as slices
     :param starttime: start time
     :type  starttime: :class:`~obspy.UTCDateTime`
     :param endtime: end time
     :type  endtime: :class:`~obspy.UTCDateTime`
     :param fp: file pointer
     :type  fp: class `file`
+    :rtype: ~class `obspy.core.Stream`
+    
+    For speed, reads all blocks at once and extracts as slices
     """
     starttime, endtime = _convert_time_bounds(starttime, endtime, fp)
 
@@ -175,6 +182,8 @@ def _read_data(starttime, endtime, fp, verbose=False):
                        + chan_data[2: 498*chan_blocks: 3].astype('B'),
                        dtype='int32')
         stream.append(Trace(data=t32, header=stats))
+    eps = 1e-6
+    stream.trim(starttime=starttime, endtime=endtime-eps, nearest_sample=False)    
     return stream
 
 

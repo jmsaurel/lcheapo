@@ -13,3 +13,6 @@ First distributed
 - 0.4.5: Fixed an error in SDS channel directory names
 - 0.4.6: Puts correct band codes for given sampling rate
 - 0.4.7: Added leapsecond handling to lc2SDS
+- 0.4.8: Fixed lcread to only return data within the requested time bounds
+         (inclusive start, exclusive end).  Also stops lc2SDS daily files
+         from overlapping

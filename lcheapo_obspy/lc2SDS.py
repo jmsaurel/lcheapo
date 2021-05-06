@@ -51,12 +51,12 @@ def lc2SDS():
                         help="station code for this instrument")
     parser.add_argument("--network", default='XX',
                         help="network code for this instrument")
-    parser.add_argument("-s", "--start_times", nargs='+', type=UTCDateTime,
+    parser.add_argument("-s", "--start_times", nargs='+',
                         metavar=("REF_START", "INST_START"),
                         help="Start datetimes for the reference (usually GPS) "
                              "and instrument.  If only one value is provided, "
                              "it will be used for both")
-    parser.add_argument("-e", "--end_times", nargs=2, type=UTCDateTime,
+    parser.add_argument("-e", "--end_times", nargs=2,
                         metavar=("REF_END", "INST_END"),
                         help="End datetimes for the reference and instrument")
     parser.add_argument("--leapsecond_times", nargs='+',
@@ -80,12 +80,15 @@ def lc2SDS():
     parser.add_argument("--version", action='store_true',
                         help="Print version number and quit")
     args = parser.parse_args()
+    parameters = vars(args).copy()
     if args.version is True:
         print(f"Version {__version__}")
         sys.exit(0)
         
-    args.leapsecond_times, args.leapsecond_types = _adjust_leapseconds(
-        args.leapsecond_times, args.leapsecond_types)
+    args.start_times = [UTCDateTime(x) for x in args.start_times]
+    args.end_times = [UTCDateTime(x) for x in args.end_times]
+    ls_times, ls_types = _adjust_leapseconds(args.leapsecond_times,
+                                             args.leapsecond_types)
     args.in_dir, args.out_dir = sdpchain.setup_paths(args.base_dir,
                                                      args.in_dir,
                                                      args.out_dir)
@@ -126,48 +129,16 @@ def lc2SDS():
                                         microsecond=0)
         lc_end_day = lc_end.replace(hour=0, minute=0, second=0, microsecond=0)
         stime = lc_start_day
-        bar = IncrementalBar(f'Processing {infile}', max=(lc_end_day-lc_start_day)/86400)
+        bar = IncrementalBar(f'Processing {infile}',
+                             max=(lc_end_day-lc_start_day)/86400 + 1)
         while stime <= lc_end_day:
             inst_offset = inst_start_offset + inst_drift * (stime - ref_start)
-            starttime = stime + inst_offset
-            endtime = starttime + 86400
-            if args.verbose:
-                print('{}, inst_offset = {:.3f}s: reading {}-{}'.format(
-                    stime.strftime('%Y-%m-%d'), inst_offset,
-                    starttime.isoformat(), endtime.isoformat()))
-            stream = lcread(Path(args.in_dir) / infile,
-                            starttime=starttime,
-                            endtime=endtime,
-                            network=args.network,
-                            station=args.station,
-                            obs_type=args.obs_type)
-
-            for tr in stream:
-                s = tr.stats
-                # Correct leapsecond
-                s.starttime += _leap_correct(stime, args.leapsecond_times,
-                                             args.leapsecond_types)
-                # Correct drift
-                s.starttime -= inst_offset
-                # s.mseed['dataquality'] = quality_flag
-
-                # Write file
-                dirname = Path(args.out_dir) / 'SDS' / str(stime.year) /\
-                    s.network / s.station / f'{s.channel}.D'
-                fname = '{}.{}.{}.{}.D.{}.{:03d}'.format(
-                    s.network, s.station, s.location, s.channel,
-                    stime.year, stime.julday)
-                dirname.mkdir(parents=True, exist_ok=True)
-                tr.write(str(dirname / fname), format='MSEED',
-                         encoding='STEIM1', reclen=4096)
+            _write_daily(inst_offset, stime, infile, args, ls_times, ls_types)
             bar.next()
             stime += 86400
         bar.finish()
 
     return_code = 0
-    parameters = vars(args)
-    parameters['start_times'] = [str(x) for x in parameters['start_times']]
-    parameters['end_times'] = [str(x) for x in parameters['end_times']]
     sdpchain.make_process_steps_file(
         args.in_dir,
         args.out_dir,
@@ -177,8 +148,41 @@ def lc2SDS():
         " ".join(sys.argv),
         startTimeStr,
         return_code,
-        exec_parameters=vars(args))
+        exec_parameters=parameters)
     sys.exit(return_code)
+
+
+def _write_daily(inst_offset, stime, infile, args, ls_times, ls_types):
+    starttime = stime + inst_offset
+    endtime = starttime + 86400 - eps
+    if args.verbose:
+        print('{}, inst_offset = {:.3f}s: reading {}-{}'.format(
+            stime.strftime('%Y-%m-%d'), inst_offset,
+            starttime.isoformat(), endtime.isoformat()))
+    stream = lcread(Path(args.in_dir) / infile,
+                    starttime=starttime,
+                    endtime=endtime,
+                    network=args.network,
+                    station=args.station,
+                    obs_type=args.obs_type)
+
+    for tr in stream:
+        s = tr.stats
+        # Correct leapsecond
+        s.starttime += _leap_correct(stime, ls_times, ls_types)
+        # Correct drift
+        s.starttime -= inst_offset
+        # s.mseed['dataquality'] = quality_flag
+
+        # Write file
+        dirname = Path(args.out_dir) / 'SDS' / str(stime.year) /\
+            s.network / s.station / f'{s.channel}.D'
+        fname = '{}.{}.{}.{}.D.{}.{:03d}'.format(
+            s.network, s.station, s.location, s.channel,
+            stime.year, stime.julday)
+        dirname.mkdir(parents=True, exist_ok=True)
+        tr.write(str(dirname / fname), format='MSEED',
+                 encoding='STEIM1', reclen=4096)
 
 
 def _adjust_leapseconds(ls_times, ls_types):
@@ -191,23 +195,24 @@ def _adjust_leapseconds(ls_times, ls_types):
     :param ls_types: str
     :returns: ls_times, ls_types
     """
-    if len(ls_times) > 0:
-        # Quick and stupid way to avoid second=60 problem
-        new_times = []
-        for t in ls_times:
-            if t[-2:] == '60':
-                t=t[:-2] + '59'
-            new_times.append(UTCDateTime(t))
-        if not len(new_times) == len(ls_types):
-            if len(ls_types) == 1:
-                ls_types = ls_types * len(new_times)
-            else:
-                raise IndexError(f"len(ls_times) ({len(new_times)}) "
-                                 "incompatible with "
-                                 f"len(ls_types) {len(ls_types)}")
-        for tp in ls_types:
-            if tp not in '+-':
-                raise ValueError(f"'{tp}' is not a valid leapsecond type")
+    if ls_times is None:
+        return ls_times, ls_types
+    # Quick and stupid way to avoid second=60 problem
+    new_times = []
+    for t in ls_times:
+        if t[-2:] == '60':
+            t=t[:-2] + '59'
+        new_times.append(UTCDateTime(t))
+    if not len(new_times) == len(ls_types):
+        if len(ls_types) == 1:
+            ls_types = ls_types * len(new_times)
+        else:
+            raise IndexError(f"len(ls_times) ({len(new_times)}) "
+                             "incompatible with "
+                             f"len(ls_types) {len(ls_types)}")
+    for tp in ls_types:
+        if tp not in '+-':
+            raise ValueError(f"'{tp}' is not a valid leapsecond type")
     return new_times, ls_types
 
                             
@@ -221,7 +226,7 @@ def _leap_correct(starttime, ls_times, ls_types):
         is not 0, ls_types and ls_times must have same length
     :returns: seconds to add to current OBS-recorded time
     """
-    if len(ls_times) == 0:
+    if ls_times is None:
         return 0
     correct = 0
     for ls_time, ls_type in zip(ls_times, ls_types):
