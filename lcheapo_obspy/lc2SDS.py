@@ -154,7 +154,7 @@ def lc2SDS():
 
 def _write_daily(inst_offset, stime, infile, args, ls_times, ls_types):
     starttime = stime + inst_offset
-    endtime = starttime + 86400 - eps
+    endtime = starttime + 86400
     if args.verbose:
         print('{}, inst_offset = {:.3f}s: reading {}-{}'.format(
             stime.strftime('%Y-%m-%d'), inst_offset,
