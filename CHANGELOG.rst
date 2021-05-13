@@ -16,3 +16,5 @@ First distributed
 - 0.4.8: Fixed lcread to only return data within the requested time bounds
          (inclusive start, exclusive end).  Also stops lc2SDS daily files
          from overlapping
+- 0.4.9: lcread/plot no longer quits if there is a bad input file or
+         date range is outside the range of some of the files

@@ -68,6 +68,9 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
 
     with open(filename, 'rb') as fp:
         data = _read_data(starttime, endtime, fp, verbose)
+        if data is None:
+            print(f'Did not read from file {filename}')
+            return None
     data = _stuff_info(data, network, station, obs_type)
     return data
 
@@ -89,7 +92,9 @@ def get_data_timelimits(lcheapo_object):
 
     lcHeader = LCDiskHeader()
     block = LCDataBlock()
-    lcHeader.readHeader(fp)
+    status = lcHeader.readHeader(fp)
+    if status == 0:
+        return None, None
 
     # read starttime
     startBlock = lcHeader.dataStart
@@ -124,6 +129,8 @@ def _read_data(starttime, endtime, fp, verbose=False):
     For speed, reads all blocks at once and extracts as slices
     """
     starttime, endtime = _convert_time_bounds(starttime, endtime, fp)
+    if starttime is None:
+        return None
 
     lcHeader = LCDiskHeader()
     block = LCDataBlock()
@@ -229,6 +236,8 @@ def _convert_time_bounds(starttime, endtime, fp):
         data bounds)
     """
     data_start, data_end = get_data_timelimits(fp)
+    if data_start is None:
+        return None, None
     if not starttime:
         starttime = 0
     if endtime == 0:
@@ -242,9 +251,15 @@ def _convert_time_bounds(starttime, endtime, fp):
     if isinstance(endtime, (float, int)):
         endtime = starttime + endtime
     # Handle bad time ranges
-    assert endtime > starttime, "endtime is before starttime"
-    assert starttime < data_end, f"starttime is after data end ({data_end})"
-    assert endtime > data_start, f"endtime is before data start ({data_start})"
+    if endtime <= starttime:
+         print("{endtime=} is before {starttime=}")
+         return None, None
+    if starttime >= data_end:
+        print(f"{starttime=} is after {data_end}=")
+        return None, None
+    if endtime <= data_start:
+        print(f"{endtime=} is before {data_start=}")
+        return None, None
     if starttime < data_start:
         starttime = data_start
     if endtime > data_end:
@@ -518,11 +533,14 @@ def _plot_command():
                  station=station_code,
                  obs_type=args.obs_type,
                  verbose=args.verbose)
-        s = s.select(channel=args.channel)
-        stream += s
-        station_code = None
-    stream.plot(size=(800, 600), equal_scale=args.equal_scale, method='full')
-
+        if s is not None:
+            s = s.select(channel=args.channel)
+            stream += s
+            station_code = None
+    if len(stream) > 0:
+        stream.plot(size=(800, 600), equal_scale=args.equal_scale, method='full')
+    else:
+        print('Nothing read, nothing plotted!')
 
 def _normalize_time_arg(a):
     """
