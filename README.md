@@ -8,6 +8,8 @@ Overview
 
 ### Command-line programs:
 
+Type ``{command} -h`` to get a list of parameters and options
+
 | Program | description |
 | ------ | -------------------- |
 | lcplot | plot an LCHEAPO file |
