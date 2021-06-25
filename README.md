@@ -3,6 +3,9 @@ lcheapo_obspy
 
 The missing link between LCHEAPO data and ObsPy
 
+If you want to modify LCHEAPO files, go to [lcheapo](https://github.com/WayneCrawford/lcheapo)
+
+
 Overview
 ------------
 
