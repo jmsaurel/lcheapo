@@ -1,10 +1,7 @@
-lcheapo_obspy
+lcheapo
 ===================
 
-The missing link between LCHEAPO data and ObsPy
-
-If you want to modify LCHEAPO files, go to [lcheapo](https://github.com/WayneCrawford/lcheapo)
-
+Viewing and modifying LCHEAPO OBS data
 
 Overview
 ------------
@@ -13,41 +10,62 @@ Overview
 
 Type ``{command} -h`` to get a list of parameters and options
 
-| Program | description |
-| ------ | -------------------- |
-| lcplot | plot an LCHEAPO file |
-| lctest | plot LCHEAPO tests |
-| lc2SDS_weak | converts LCHEAPO file to SeisComp Data Structure, with basic drift correction |
-| lc_examples | create a directory with examples of lcplot and lctest |
+#### Non-modifying programs
+View the files and/or their data
 
-### lctest control files
+Program | description
+------ | --------------------
+lcdump |  dump raw information from LCHEAPO files
+lcinfo |  return basic information about an LCHEAPO file
+lcplot | plot an LCHEAPO file
+lctest | plot LCHEAPO tests
+lc_examples | create a directory with examples of lcplot and lctest
+
+#### Modifying programs
+Change the files and/or their data.  Use the *SDPCHAIN* protocols for FAIR-
+compliant data:
+	- Create/append to a process-steps.json file
+	- Read from input directory (-i) and output to (-o)
+
+Program | description
+------ | --------------------
+lccut |  extract section of an LCHEAPO file
+lcfix |  fix common bugs in an LCHEAPO file
+lcheader|  create an LCHEAPO header + directory
+sdpcat |  concatenate data files 
+sdpstep |  run a command line tool and save info to process-steps file
+lc2ms_weak | converts LCHEAPO file to basic miniSEED files
+lc2SDS_weak | converts LCHEAPO file to SeisComp Data Structure, with basic drift correction
+
+
+## lctest control files
 
 lctest uses YAML-format control files to indicate what kind of plots to output.  There are 4 main sections in each file:
 
-**``input``**: input data parameters
-  - **``starttime``**: starttime to read (0 means from the beginning of each file)
-  - **``endtime``**: end time to read (0 means to the end of each file)
-  - **``datafiles``**: a list of the LCHEAPO files to read
-    - **``name``**: the filename
-    - **``obs_type``**: the obs type (used for spectral instrument responses, possible values are given
-                    in the help for ``lcplot``
-    - **``station``**: station name to use for this file in the plots
+- **``input``**: input data parameters
+    - **``starttime``**: starttime to read (0 means from the beginning of each file)
+    - **``endtime``**: end time to read (0 means to the end of each file)
+    - **``datafiles``**: a list of the LCHEAPO files to read
+        - **``name``**: the filename
+        - **``obs_type``**: the obs type (used for spectral instrument 
+          responses,  possible values are given in the help for ``lcplot``
+        - **``station``**: station name to use for this file in the plots
 
-**``output``**: output plot file parameters
-  - **``show``**: show the plots?  If False, just save them to files
-  - **``filebase``**: each output file will start with this
+- **``output``**: output plot file parameters
+    - **``show``**: show the plots?  If False, just save them to files
+    - **``filebase``**: each output file will start with this
 
-**``plots``**: the plots to make
-  - **``time_series``**: a list of standard waveform plots
-      - **``description``**: text to put in plot title
-      - **``select``**: parameters to use to select a subset of all the waveforms (see obspy.core.stream.Stream.select())
+- **``plots``**: the plots to make
+    - **``time_series``**: a list of standard waveform plots
+        - **``description``**: text to put in plot title
+        - **``select``**: parameters to use to select a subset of all the waveforms (see obspy.core.stream.Stream.select())
       - **``start_time``** and **``end_time``**: allow you to plot a subwindow of the read data
-  - **``particle_motion``**: list of particle motion plot types
-  - **``spectra``**: list of spectra plots
-      - **``description``**: as in ``time_series``
-      - **``select``**: as in ``time_series``
-      - **``start_time``** and **``end_time``**: as in ``time_series``
-  - **``stack``**: plot waveforms from different times on the same channel together.  This useful for single stations where you did the same think (tap, lift, etc) several times, to be sure that the input and response were consistent.
+    - **``particle_motion``**: list of particle motion plot types
+    - **``spectra``**: list of spectra plots
+        - **``description``**: as in ``time_series``
+        - **``select``**: as in ``time_series``
+        - **``start_time``** and **``end_time``**: as in ``time_series``
+    - **``stack``**: plot waveforms from different times on the same channel together.  This useful for single stations where you did the same think (tap, lift, etc) several times, to be sure that the input and response were consistent.
        - **``description``**: as in ``time_series``
        - **``orientation_codes``**: list of orientation codes to plot (one plot will be made for each orientation code (the last letter of the channel name))
        - **``times``**: list of times to plot at (each one "yyyy-mm-ddTHH:MM:SS")
@@ -68,9 +86,9 @@ lctest uses YAML-format control files to indicate what kind of plots to output. 
        - **``offset_before_ts.s``**: as above, but for the time series plot
        - **``offset_after_ts.s``**: ditto
 
-**``plot_globals``**: Default values for each type of plot.  Use the same names and values as for **``plots``**
+- **``plot_globals``**: Default values for each type of plot.  Use the same names and values as for **``plots``**
 
-#### Example 1: analysing one station in depth
+#### Example 1: analysing one station
 ```yaml
 ---
     input:

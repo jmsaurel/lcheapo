@@ -1,0 +1,61 @@
+---
+    input:
+        starttime: null
+        endtime: null
+        datafiles:
+            - 
+                name: 20191107T14_SPOBS09_F02.raw.lch
+                obs_type: 'SPOBS2'
+                station: '09F2'
+            - 
+                name: 20191107T14_SPOBS09_F02.raw.lch
+                obs_type: 'SPOBS2'
+                station: '09c1'
+            - 
+                name: 20191107T14_SPOBS09_F02.raw.lch
+                obs_type: 'SPOBS2'
+                station: '09c2'
+        description: "Simulation of multi-instrument test"
+    output:
+        show: True
+        filebase: "MAYOBS6"
+    plot_globals:
+        stack:
+            offset_before.s: 0.5
+            offset_after.s:  1.5
+            plot_span: False
+        particle_motion:
+            offset_before.s: 0.00
+            offset_after.s: 0.03
+            offset_before_ts.s: 0.1
+            offset_after_ts.s: 0.2
+        spectra:
+            window_length.s: 100
+    plots:
+        time_series:
+            -
+                description: Entire time series 
+                select: {station: "*"}
+                start_time: null
+                end_time: null
+            -
+                description: Quiet period 
+                select: {channel: "*3"}
+                start_time: null
+                end_time: "2019-11-07T13:57"
+            -
+                description: Rubber hammer taps 
+                select: {station: "*"}
+                start_time: "2019-11-07T14:08"
+                end_time: "2019-11-07T14:11:10"
+        spectra:
+            -
+                description: Entire time series 
+                select: {component: "3"}
+                start_time: null
+                end_time: null
+            -
+                description: Quiet period 
+                select: {channel: "*3"}
+                start_time: null
+                end_time: "2019-11-07T13:57"

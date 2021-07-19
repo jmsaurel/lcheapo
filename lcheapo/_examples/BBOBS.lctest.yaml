@@ -1,0 +1,50 @@
+---
+    input:
+        starttime: 0
+        endtime: 0
+        datafiles:
+            - 
+                name: "Data_BB07_04_10_12.raw.lch"
+                obs_type: 'BBOBS'
+                station: 'TEST'
+        description: "Tests on BBOBS"
+    output:
+        show: True
+        filebase: 'BB07tests'
+    plot_globals:
+        spectra:
+            window_length.s: 1024
+    plots:
+        time_series:
+            -
+                description: "Entire time series"
+                select: {station: "*"}
+                start_time: null
+                end_time: null
+            -
+                description: "Quiet time"
+                select: {station: "*"}
+                start_time: "2012-10-05T02:00:00"
+                end_time: "2012-10-05T03:05:00"
+            -
+                description: "Fake stack time"
+                select: {station: "*"}
+                start_time: "2012-10-05T05:12:00"
+                end_time: "2012-10-05T05:21:00"
+        spectra:
+            -
+                description: "Quiet time"
+                select: {station: "*"}
+                start_time: "2012-10-05T02:00:00"
+                end_time: "2012-10-05T03:05:00"
+        stack:
+            -
+                description: "Fake stack, no tests run"
+                orientation_codes: ["Z"]
+                offset_before.s: 1
+                offset_after.s: 5
+                times: 
+                    - "2012-10-05T05:12:10"
+                    - "2012-10-05T05:13:50"
+                    - "2012-10-05T05:17:55"
+                    - "2012-10-05T05:20:25"

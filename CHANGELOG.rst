@@ -18,3 +18,7 @@ First distributed
          from overlapping
 - 0.4.9: lcread/plot no longer quits if there is a bad input file or
          date range is outside the range of some of the files
+
+v1.0
+------
+Combined lcheapo and lcheapo_obspy

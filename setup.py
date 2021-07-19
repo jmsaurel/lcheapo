@@ -1,25 +1,25 @@
 import setuptools
 
-with open("README.rst", "r") as fh:
+with open("README.md", "r") as fh:
     long_description = fh.read()
 
 version = {}
-with open("lcheapo_obspy/version.py") as fp:
+with open("lcheapo/version.py") as fp:
     exec(fp.read(), version)
 
 setuptools.setup(
-    name="lcheapo_obspy",
+    name="lcheapo",
     version=version['__version__'],
     author="Wayne Crawford",
     author_email="crawford@ipgp.fr",
-    description="LCHEAPO data reading and plotting",
+    description="LCHEAPO data routines",
     long_description=long_description,
     long_description_content_type="text/x-rst; charset=UTF-8",
-    url="https://github.com/WayneCrawford/lcheapo_obspy",
+    url="https://github.com/WayneCrawford/lcheapo",
     # packages=setuptools.find_packages(),
-    packages=['lcheapo_obspy'],
-    package_dir={'lcheapo_obspy': 'lcheapo_obspy'},
-    package_data={'lcheapo_obspy': ['data/*.xml', 'data/*.json',
+    packages=['lcheapo'],
+    package_dir={'lcheapo': 'lcheapo'},
+    package_data={'lcheapo': ['data/*.xml', 'data/*.json',
                                     '_examples/*.py', '_examples/*.yaml']},
     # include_package_data=True,
     install_requires=[
@@ -32,13 +32,21 @@ setuptools.setup(
       ],
     entry_points={
          'console_scripts': [
-             'lcplot=lcheapo_obspy.lcread:_plot_command',
-             'lc2SDS_weak=lcheapo_obspy.lc2SDS:lc2SDS',
-             'lctest=lcheapo_obspy.lctest:main',
-             'lc_examples=lcheapo_obspy.lcputexamples:main'
+             'sdpcat=lcheapo.sdpchain:sdpcat',
+             'sdpstep=lcheapo.sdpchain:sdpstep',
+             'lcfix=lcheapo.lcfix:main',
+             'lcdump=lcheapo.lcdump:main',
+             'lccut=lcheapo.lccut:main',
+             'lcinfo=lcheapo.lcinfo:main',
+             'lcheader=lcheapo.lcheader:main',
+             'lcplot=lcheapo.lcread:_plot_command',
+             'lc2SDS_weak=lcheapo.lc2SDS:lc2SDS',
+             'lc2ms_weak=lcheapo.lc2ms:lc2ms',
+             'lctest=lcheapo.lctest:main',
+             'lc_examples=lcheapo.lcputexamples:main'
          ]
     },
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     classifiers=(
         "Development Status :: 4 - Beta",
         "Environment :: Console",
