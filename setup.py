@@ -14,7 +14,7 @@ setuptools.setup(
     author_email="crawford@ipgp.fr",
     description="LCHEAPO data routines",
     long_description=long_description,
-    long_description_content_type="text/x-rst; charset=UTF-8",
+    long_description_content_type="text/markdown",
     url="https://github.com/WayneCrawford/lcheapo",
     # packages=setuptools.find_packages(),
     packages=['lcheapo'],

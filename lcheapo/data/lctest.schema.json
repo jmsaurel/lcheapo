@@ -15,10 +15,10 @@
         "input": {
             "type": "object",
             "description": "Parameters for reading in the data",
-            "required": ["starttime", "endtime", "datafiles"],
+            "required": ["start_time", "end_time", "datafiles"],
             "properties": {
-                "starttime":   {"$ref": "#/definitions/date-time_or_num"},
-                "endtime":     {"$ref": "#/definitions/date-time_or_num"},
+                "start_time":   {"$ref": "#/definitions/date-time_or_num"},
+                "end_time":     {"$ref": "#/definitions/date-time_or_num"},
                 "datafiles":   {"$ref": "#/definitions/datafiles"},
                 "description": {"type": "string"}
             },
@@ -140,7 +140,7 @@
         "time_series": {
             "type": "object",
             "description": "Time series plot",
-            "required": ["description", "start_time", "end_time"],
+            "required": ["description"],
             "properties": {
                 "plot_type":   {"type": "string", "enum": ["time_series"]},
                 "description": {"type": "string"},
@@ -153,7 +153,7 @@
         "spectra": {
             "type": "object",
             "description": "Spectra plot",
-            "required": ["description", "start_time", "end_time"],
+            "required": ["description"],
             "properties": {
                 "plot_type":   {"type": "string", "enum": ["spectra"]},
                 "description": {"type": "string"},

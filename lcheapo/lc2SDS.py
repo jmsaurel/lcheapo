@@ -92,17 +92,21 @@ def lc2SDS():
         args.end_times = [UTCDateTime(x) for x in args.end_times]
     ls_times, ls_types = _adjust_leapseconds(args.leapsecond_times,
                                              args.leapsecond_types)
-    args.in_dir, args.out_dir = sdpchain.setup_paths(args.base_dir,
-                                                     args.in_dir,
-                                                     args.out_dir)
+
+    # SETUP FOR PROCESS-STEPS
+    process_step = sdpchain.ProcessStep(
+        'lc2SDS',
+        " ".join(sys.argv),
+        app_description=__doc__,
+        app_version=__version__,
+        parameters=parameters)
+    args.in_dir, args.out_dir = sdpchain.setup_paths(args)
     # Expand captured wildcards
     print(f'{args.infiles=}')
     args.infiles = [x.name for f in args.infiles
                     for x in Path(args.in_dir).glob(f)]
     print(f'expanded {args.infiles=}')
 
-    startTimeStr = datetime.datetime.strftime(datetime.datetime.utcnow(),
-                                              '%Y-%m-%dT%H:%M:%S')
     for infile in args.infiles:
         lc_start, lc_end = get_data_timelimits(Path(args.in_dir) / infile)
 
@@ -142,16 +146,8 @@ def lc2SDS():
         bar.finish()
 
     return_code = 0
-    sdpchain.make_process_steps_file(
-        args.in_dir,
-        args.out_dir,
-        'lc2SDS_weak',
-        'Create or add to an SDS archive from an lcheapo file',
-        __version__,
-        " ".join(sys.argv),
-        startTimeStr,
-        return_code,
-        exec_parameters=parameters)
+    process_step.exit_code = return_code
+    process_step.write(args.in_dir, args.out_dir)
     sys.exit(return_code)
 
 

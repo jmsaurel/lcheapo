@@ -50,7 +50,7 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
 
     .. rubric:: Example
 
-    >>> from lcheapo_obspy import read
+    >>> from lcheapo import read
     >>> st = read("/path/to/four_channels.lch")
     >>> print(st)  # doctest: +ELLIPSIS
     2 Trace(s) in Stream:

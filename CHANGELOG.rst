@@ -21,4 +21,7 @@ First distributed
 
 v1.0
 ------
-Combined lcheapo and lcheapo_obspy
+b0: Combined lcheapo and lcheapo_obspy
+.0: Fixed some bugs associated with creation of the ProcessSteps class
+1.0.1: Fixed bugs where lcheapo_obspy was still called, harmonized start_time
+       in input file

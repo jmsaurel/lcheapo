@@ -1,7 +1,7 @@
 ---
     input:
-        starttime: 0
-        endtime: 0
+        start_time: 0
+        end_time: 0
         datafiles:
             - 
                 name: "Data_BB07_04_10_12.raw.lch"

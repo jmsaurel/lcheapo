@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Read LCHEAPO data into an obspy stream
+create miniSEED file(s) from LCHEAPO file(s)
 """
-# from __future__ import (absolute_import, division, print_function,
-#                         unicode_literals)
-# from future.builtins import *  # NOQA @UnusedWildImport
-
 import argparse
 # import os
 import sys
@@ -58,37 +54,33 @@ def lc2ms():
         sys.exit(0)
 
     # ADJUST INPUT PARAMETERS
-    args.in_dir, args.out_dir = sdpchain.setup_paths(args.base_dir,
-                                                     args.in_dir,
-                                                     args.out_dir)
+    process_step = sdpchain.ProcessStep(
+        'lc2ms_weak',
+        " ".join(sys.argv),
+        app_description=__doc__,
+        app_version=__version__,
+        parameters=parameters)
+    args.in_dir, args.out_dir = sdpchain.setup_paths(args)
     # Expand captured wildcards
     print(f'{args.infiles=}')
     args.infiles = [x.name for f in args.infiles
                     for x in Path(args.in_dir).glob(f)]
     print(f'expanded {args.infiles=}')
 
-    startTimeStr = datetime.datetime.strftime(datetime.datetime.utcnow(),
-                                              '%Y-%m-%dT%H:%M:%S')
     stream = lcread(Path(args.in_dir) / args.infile, network=args.network,
                     station=args.station, obs_type=args.obs_type)
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    out_files = []
     for tr in stream:
         s = tr.stats
-        fname = str(out_dir / '{}.{}.{}.{}.mseed'.format(
-                    s.network, s.station, s.location, s.channel))
+        out_files.append(f'{s.network}.{s.station}.{s.location}.{s.channel}.mseed')
+        fname = str(out_dir / out_files[-1])
         tr.write(fname, format='MSEED', encoding='STEIM1', reclen=4096)
     return_code = 0
-    sdpchain.make_process_steps_file(
-        args.in_dir,
-        args.out_dir,
-        'lc2ms_weak',
-        'create miniSEED file(s) from LCHEAPO file(s)',
-        __version__,
-        " ".join(sys.argv),
-        startTimeStr,
-        return_code,
-        exec_parameters=parameters)
+    process_step.output_files = out_files
+    process_step.exit_code = return_code
+    process_step.write(args.in_dir, args.out_dir)
     sys.exit(return_code)
 
 

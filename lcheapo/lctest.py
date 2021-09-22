@@ -40,8 +40,8 @@ def main():
     if 'time_series' in root['plots']:
         for plot in root['plots']['time_series']:
             plot_time_series(stream,
-                             _UTCDateTimeorNone(plot['start_time']),
-                             _UTCDateTimeorNone(plot['end_time']),
+                             _UTCDateTimeorNone(plot.get('start_time', None)),
+                             _UTCDateTimeorNone(plot.get('end_time', None)),
                              plot['select'],
                              description=plot['description'],
                              filebase=filebase,
@@ -66,8 +66,6 @@ def main():
         for plot in root['plots']['particle_motion']:
             tracex = _trace_component(stream, plot['orientation_code_x'])
             tracey = _trace_component(stream, plot['orientation_code_y'])
-            # tracex = stream.select(component=plot['orientation_code_x'])[0]
-            # tracey = stream.select(component=plot['orientation_code_y'])[0]
             globs = plot_globals['particle_motion']
             plot_particle_motion(
                 tracex, tracey, [UTCDateTime(t) for t in plot['times']],
@@ -108,8 +106,8 @@ def calc_spect(stream, plot_parms, glob_parms=None):
     # Select appropriate channels
     if plot_parms['select']:
         stream = stream.select(**plot_parms['select'])
-    starttime = _UTCDateTimeorNone(plot_parms['start_time'])
-    endtime = _UTCDateTimeorNone(plot_parms['end_time'])
+    starttime = _UTCDateTimeorNone(plot_parms.get('start_time', None))
+    endtime = _UTCDateTimeorNone(plot_parms.get('end_time', None))
     if starttime or endtime:
         stream = stream.slice(starttime=starttime, endtime=endtime)
     # Calculate spectra
@@ -359,8 +357,8 @@ def read_files(inputs):
     stream = Stream()
     for df in inputs['datafiles']:
         s = lcread(df['name'],
-                   starttime=inputs.get('starttime', False),
-                   endtime=inputs.get('endtime', False),
+                   starttime=inputs.get('start_time', False),
+                   endtime=inputs.get('end_time', False),
                    obs_type=df['obs_type'])
         for t in s:
             t.stats.station = df['station']
@@ -413,7 +411,7 @@ def validate_schema04(instance: dict, type: str = 'lctest'):
     :param type: type of the data structure
     """
     schema_file = pkg_resources.resource_filename(
-        "lcheapo_obspy", f"data/{type}.schema.json")
+        "lcheapo", f"data/{type}.schema.json")
     base_path = os.path.dirname(schema_file)
     base_uri = f"file:{base_path}/"
     with open(schema_file, "r") as f:

@@ -66,8 +66,7 @@ class ArgumentParser(argparse.ArgumentParser):
         (should we also copy to the output directory?)
         """
         args = self.parse_args(**kwargs)
-        full_in, full_out = setup_paths(args.base_dir, args.in_dir,
-                                        args.out_dir)
+        full_in, full_out = setup_paths(args)
         # Save full paths to "full_*"
         args.setattr('full_in_dir', full_in)
         args.setattr('full_out_dir', full_out)

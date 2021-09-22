@@ -1,7 +1,7 @@
 ---
     input:
-        starttime: null
-        endtime: null
+        start_time: null
+        end_time: null
         datafiles:
             - 
                 name: 20191107T14_SPOBS09_F02.raw.lch
