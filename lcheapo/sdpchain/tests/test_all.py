@@ -130,7 +130,7 @@ class TestMethods(unittest.TestCase):
         ns.base_dir = str(test_path)
         ns.in_dir = 'in_dir'
         ns.out_dir = 'out_dir'
-        new_in, new_out = sdpchain.setup_paths(ns, verbose=False)
+        new_in, new_out = sdpchain.ProcessStep.setup_paths(ns, verbose=False)
         self.assertEqual(new_in, str(test_path / 'in_dir'))
         self.assertEqual(new_out, str(test_path / 'out_dir'))
         self.assertTrue(out_path.is_dir())

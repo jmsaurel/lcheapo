@@ -10,7 +10,7 @@ import datetime
 import inspect
 from pathlib import Path
 
-import lcheapo.sdpchain as sdpchain
+from .sdpchain import ProcessStep
 
 from .chan_maps import chan_maps
 from .lcread import read as lcread
@@ -54,18 +54,15 @@ def lc2ms():
         sys.exit(0)
 
     # ADJUST INPUT PARAMETERS
-    process_step = sdpchain.ProcessStep(
-        'lc2ms_weak',
-        " ".join(sys.argv),
-        app_description=__doc__,
-        app_version=__version__,
-        parameters=parameters)
-    args.in_dir, args.out_dir = sdpchain.setup_paths(args)
+    process_step = ProcessStep('lc2ms_weak',
+                               " ".join(sys.argv),
+                               app_description=__doc__,
+                               app_version=__version__,
+                               parameters=parameters)
+    args.in_dir, args.out_dir, args.infiles = ProcessStep.setup_paths(args)
     # Expand captured wildcards
-    print(f'{args.infiles=}')
-    args.infiles = [x.name for f in args.infiles
-                    for x in Path(args.in_dir).glob(f)]
-    print(f'expanded {args.infiles=}')
+    # args.infiles = [x.name for f in args.infiles
+    #                 for x in Path(args.in_dir).glob(f)]
 
     stream = lcread(Path(args.in_dir) / args.infile, network=args.network,
                     station=args.station, obs_type=args.obs_type)

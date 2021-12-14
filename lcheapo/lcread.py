@@ -19,7 +19,7 @@ import numpy as np
 from obspy.core import UTCDateTime, Stream, Trace
 from obspy import read_inventory
 
-from lcheapo.lcheapo import (LCDataBlock, LCDiskHeader)
+from .lcheapo_utils import (LCDataBlock, LCDiskHeader)
 from .chan_maps import chan_maps
 
 

@@ -11,7 +11,6 @@ import distutils.spawn
 
 from .version import __version__
 from .process_steps import ProcessStep
-from .setup_paths import setup_paths
 
 assert sys.version_info >= (3, 5)
 
@@ -75,7 +74,7 @@ def main():
                                app_version = __version__,
                                parameters=args)
 
-    args.in_dir, args.out_dir = setup_paths(args)
+    args.in_dir, args.out_dir = ProcessStep.setup_paths(args)
 
     # if args.base_dir:
     #     print('Changing working directory to {}'.format(args.base_dir))

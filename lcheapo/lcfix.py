@@ -19,8 +19,8 @@ import logging      # for logging information
 from datetime import timedelta
 from pathlib import Path
 
-from .lcheapo import (LCDataBlock, LCDiskHeader, LCDirEntry)
-from . import sdpchain
+from .lcheapo_utils import (LCDataBlock, LCDiskHeader, LCDirEntry)
+from .sdpchain import ProcessStep
 from .version import __version__
 
 # ------------------------------------
@@ -239,18 +239,13 @@ def _get_options():
                         help="Force timetags to be consecutive")
     args = parser.parse_args()
     global process_step
-    process_step = sdpchain.ProcessStep(
+    process_step = ProcessStep(
         'lcfix',
         " ".join(sys.argv),
         app_description='Fix common bugs in LCHEAPO data files',
         app_version=__version__,
         parameters=args)
-    args.in_dir, args.out_dir = sdpchain.setup_paths(args)
-    # Expand captured wildcards
-    # print(f'{args.input_files=}')
-    args.input_files = [x.name for f in args.input_files
-                        for x in Path(args.in_dir).glob(f)]
-    # print(f'expanded {args.input_files=}')
+    args.in_dir, args.out_dir, args.input_files = ProcessStep.setup_paths(args)
     return args
 
 

@@ -16,12 +16,12 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/WayneCrawford/lcheapo",
-    # packages=setuptools.find_packages(),
-    packages=['lcheapo'],
-    package_dir={'lcheapo': 'lcheapo'},
-    package_data={'lcheapo': ['data/*.xml', 'data/*.json',
-                                    '_examples/*.py', '_examples/*.yaml']},
-    # include_package_data=True,
+    packages=setuptools.find_packages(),
+    include_package_data=True,
+    # packages=['lcheapo'],
+    # package_dir={'lcheapo': 'lcheapo'},
+    # package_data={'lcheapo': ['data/*.xml', 'data/*.json',
+    #                                 '_examples/*.py', '_examples/*.yaml']},
     install_requires=[
           'obspy>=1.1',
           'pyyaml>5.0'
@@ -46,7 +46,7 @@ setuptools.setup(
              'lc_examples=lcheapo.lcputexamples:main'
          ]
     },
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     classifiers=(
         "Development Status :: 4 - Beta",
         "Environment :: Console",

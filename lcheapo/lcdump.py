@@ -12,7 +12,7 @@ import sys
 import argparse
 import datetime as dt
 
-from .lcheapo import (LCDiskHeader, LCDirEntry, LCDataBlock)
+from .lcheapo_utils import (LCDiskHeader, LCDirEntry, LCDataBlock)
 
 
 # ------------------------------------

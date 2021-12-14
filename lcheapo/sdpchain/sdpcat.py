@@ -17,7 +17,6 @@ from pathlib import Path
 import shutil
 
 from .process_steps import ProcessStep
-from .setup_paths import setup_paths
 from .version import __version__
 
 
@@ -31,7 +30,7 @@ def sdpcat():
         app_version = __version__,
         parameters=args)
 
-    args.in_dir, args.out_dir = setup_paths(args)
+    args.in_dir, args.out_dir = ProcessStep.setup_paths(args)
     # VERIFY THAT INPUT FILES EXIST AND OUTPUT FILE DOESN'T
     if len(args.input_files) < 2:
         print("You only provided 1 input file: this is just a copy!")

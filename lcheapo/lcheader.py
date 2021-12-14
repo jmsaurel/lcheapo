@@ -15,10 +15,10 @@ import argparse
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from .lcheapo import (LCDiskHeader, LCDirEntry)
+from .lcheapo_utils import (LCDiskHeader, LCDirEntry)
 from .version import __version__
 
-from . import sdpchain
+from .sdpchain.process_steps import ProcessStep
 
 # ------------------------------------
 # Global Variable Declarations
@@ -143,14 +143,14 @@ def __getOptions():
                         help="path for output files (abs, or rel to base)")
     args = parser.parse_args()
     global process_step
-    process_step = sdpchain.ProcessStep(
-        'lcheader',
-        " ".join(sys.argv),
-        app_description='Create an LCHEAPO header and directory',
-        app_version=__version__,
-        parameters=args)
+    process_step = ProcessStep('lcheader',
+                               " ".join(sys.argv),
+                               app_description='Create LCHEAPO header and '
+                                               'directory',
+                               app_version=__version__,
+                               parameters=args)
 
-    args.in_dir, args.out_dir = sdpchain.setup_paths(args)
+    args.in_dir, args.out_dir, _ = ProcessStep.setup_paths(args)
     args = parser.parse_args()
 
     # Get the filename (the arguments)

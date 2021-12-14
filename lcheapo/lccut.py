@@ -17,9 +17,8 @@ import sys
 from math import floor
 from pathlib import Path
 
-from . import sdpchain
+from .sdpchain import ProcessStep
 from .version import __version__
-# from .lcheapo import (LCDataBlock, LCDiskHeader, LCDirEntry)
 
 BLOCK_SIZE = 512
 MAX_BLOCK_READ = 2048   # max number of blocks to read at once
@@ -117,13 +116,12 @@ def getOptions():
                         help="path for output files (abs, or rel to base)")
     args = parser.parse_args()
     global process_step
-    process_step = sdpchain.ProcessStep(
-        'lccut',
-        " ".join(sys.argv),
-        app_description=__doc__,
-        app_version=__version__,
-        parameters=args)
-    args.in_dir, args.out_dir = sdpchain.setup_paths(args)
+    process_step = ProcessStep('lccut',
+                               " ".join(sys.argv),
+                               app_description=__doc__,
+                               app_version=__version__,
+                               parameters=args)
+    args.in_dir, args.out_dir, _ = ProcessStep.setup_paths(args)
     return args
 
 

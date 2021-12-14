@@ -10,8 +10,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-from . import sdpchain
-from .lcheapo import (LCDataBlock, LCDiskHeader)
+from .sdpchain import ProcessStep
+from .lcheapo_utils import (LCDataBlock, LCDiskHeader)
 import argparse
 import os
 import datetime
@@ -24,7 +24,7 @@ def main():
 
     # GET ARGUMENTS
     args = getOptions()
-    in_filename_path, out_filename_path = sdpchain.setup_paths(args)
+    in_filename_path, out_filename_path, _ = ProcessStep.setup_paths(args)
 
     for filename in args.infiles:
         with open(os.path.join(in_filename_path, filename),
@@ -77,11 +77,14 @@ def _print_Info(fp):
     lcHeader.seekHeaderPosition(fp)
     status = lcHeader.readHeader(fp)
     if status == 0:
-        return
-    sample_rate = lcHeader.realSampleRate
-    n_channels = lcHeader.numberOfChannels
-
-    first_data_block = lcHeader.dataStart
+        print("Assuming file has no header, wish me luck...")
+        first data_block = 0
+        n_channels, sample_rate = _estimate_parms(fp, first_data_block)
+    else:
+        sample_rate = lcHeader.realSampleRate
+        n_channels = lcHeader.numberOfChannels
+        first_data_block = lcHeader.dataStart
+    
     fp.seek(0, 2)                # Seek end of file
     last_data_block = int(fp.tell() / 512) - 1
 
@@ -93,6 +96,27 @@ def _print_Info(fp):
     print('start time  = {}'.format(start_time))
     print('end time    = {}'.format(end_time))
 
+
+def _estimate_parms(fp, first_data_block, imax=10):
+    lcData = LCDataBlock()
+    base_sample_rate = 62.5
+    n_samples = 166
+    n_channels = 1
+    for i in range(imax)
+        lcData.seekBlock(fp, i)
+        lcData.readBlock(fp)
+        if lcData.muxChannel+1 > n_channels:
+            nchannels = lcData.muxChannel + 1
+    if nchannels >=imax:
+        raise ValueError('File indicates more channels {:d} than tested {:d}'
+                         .format(nchannels, imax))
+    sample_rate = n_samples / (_get_times(fp, n_channels, 1)[0]
+                               - _get_times(fp, 0, 1)[0])
+    rate_multiplier = sample_rate/base_sample_rate
+    if not rate_multiplier == floor(rate_multiplier)
+        rase ValueError('Sample rate ({:f}) is not a multiple of {:f}'
+                        .format (sample_rate, base_sample_rate))
+    return n_channels, sample_rate
 
 if __name__ == '__main__':
     main()

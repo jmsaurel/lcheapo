@@ -145,7 +145,57 @@ class ProcessStep:
                 del ep['output_file']
             else:
                 ep['output_file'] = self.output_file
-
+    
+    @staticmethod
+    def setup_paths(args, expand_wildcards=True, verbose=True):
+        """
+        Set up paths using SDPCHAIN standards
+    
+        Args:
+            args (:class:NameSpace): usually created by argparser, has
+                    attributes base_dir, in_dir, out_dir and input_files
+            expand_wildcards (bool): expand captured wildcards in input_files?
+        Returns:
+            (tuple):
+                in_dir, out_dir, input_files: base_dir-adjusted paths and filenames
+        
+        The rules are:
+            - base_dir is the root for in_dir and out_dir)
+            - in_dir is the directory for input files.  An absolute path or relative
+                       to base_dir
+            - out_dir is the directory to output to.
+            - in_dir and out_dir are absolute paths or relative to base_dir
+        """
+        if not hasattr(args, "base_dir"):
+            raise NameError('args has no base_dir attribute')
+        if not hasattr(args, "in_dir"):
+            raise NameError('args has no in_dir attribute')
+        if not hasattr(args, "out_dir"):
+            raise NameError('args has no out_dir attribute')
+        if not hasattr(args, "input_files"):
+            raise NameError('args has no out_dir attribute')
+        in_path = _choose_path(args.base_dir, args.in_dir)
+        out_path = _choose_path(args.base_dir, args.out_dir)
+        assert Path(in_path).is_dir() is True
+        assert not Path(out_path).is_file()
+        if Path(out_path).exists() is False:
+            if verbose:
+                print(f"out_dir '{out_path}' does not exist, creating...")
+            Path(out_path).mkdir(parents=True)
+        if expand_wildcards is True:
+            input_files = [x.name for f in args.input_files
+                           for x in Path(in_path).glob(f)]
+        else:
+            input_files = args.input_files
+        return in_path, out_path, input_files
+    
+def _choose_path(base_dir, sub_dir):
+    """ Set up absolute path to sub-directory """
+    if Path(sub_dir).is_absolute():
+        return sub_dir
+    return str(Path(base_dir) / sub_dir)
+    
+    
 def _unique_path(directory, name_pattern):
     counter = 0
     while True:

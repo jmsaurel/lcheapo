@@ -37,9 +37,8 @@ SDPCHAIN rules (process-steps file, -i, -o, -d)
 :sdpstep: run a standard command-line program 
 :sdpcat: concatenate binary files
 """
-from .setup_paths import setup_paths
+name = "sdpchain"
 from .process_steps import ProcessStep
 from .sdpcat import sdpcat
 from .sdpstep import main as sdpstep, is_tool
-from ..version import __version__
-name = "sdpchain"
+from .version import __version__

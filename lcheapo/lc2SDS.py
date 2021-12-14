@@ -16,7 +16,7 @@ import inspect
 from pathlib import Path
 
 from obspy.core import UTCDateTime
-import lcheapo.sdpchain as sdpchain
+from .sdpchain import ProcessStep
 from progress.bar import IncrementalBar
 
 from .chan_maps import chan_maps
@@ -94,18 +94,15 @@ def lc2SDS():
                                              args.leapsecond_types)
 
     # SETUP FOR PROCESS-STEPS
-    process_step = sdpchain.ProcessStep(
-        'lc2SDS',
-        " ".join(sys.argv),
-        app_description=__doc__,
-        app_version=__version__,
-        parameters=parameters)
-    args.in_dir, args.out_dir = sdpchain.setup_paths(args)
+    process_step = ProcessStep('lc2SDS',
+                               " ".join(sys.argv),
+                               app_description=__doc__,
+                               app_version=__version__,
+                               parameters=parameters)
+    args.in_dir, args.out_dir, args.infiles = ProcessStep.setup_paths(args)
     # Expand captured wildcards
-    print(f'{args.infiles=}')
-    args.infiles = [x.name for f in args.infiles
-                    for x in Path(args.in_dir).glob(f)]
-    print(f'expanded {args.infiles=}')
+    #args.infiles = [x.name for f in args.infiles
+    #                for x in Path(args.in_dir).glob(f)]
 
     for infile in args.infiles:
         lc_start, lc_end = get_data_timelimits(Path(args.in_dir) / infile)

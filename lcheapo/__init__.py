@@ -1,3 +1,3 @@
 name = "lcheapo"
-from .lcheapo import (LCDataBlock, LCDiskHeader, LCDirEntry)
-from . import sdpchain
+# from .lcheapo_utils import (LCDataBlock, LCDiskHeader, LCDirEntry)
+# from .sdpchain import ProcessStep
