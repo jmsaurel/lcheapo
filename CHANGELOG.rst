@@ -30,7 +30,10 @@ b0: Combined lcheapo and lcheapo_obspy
 1.0.4: Further cleaned up references to sdpchain, changed setup.py to
        automatically find modules (manual system used before didn't put
        sdpchain/ on PyPI)
-1.0.5: Changed required python version to 3.8 (some files use '=' specifier
-       in f-strings).
-       Integrated input_filename wildcard expansion into ProcessSteps.setup_path().
-       lcinfo now tries to work even if there is no header
+1.0.5: 
+- Changed required python version to 3.8 (some files use '=' specifier
+  in f-strings).
+- Integrated input_filename wildcard expansion into ProcessSteps.setup_path().
+- lcinfo now tries to work even if there is no header
+- Add example plots to lctest description in README.md
+- Fix bug in lc_test particle_motion part

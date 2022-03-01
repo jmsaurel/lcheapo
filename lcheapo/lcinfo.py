@@ -14,7 +14,7 @@ from .sdpchain import ProcessStep
 from .lcheapo_utils import (LCDataBlock, LCDiskHeader)
 import argparse
 import os
-import datetime
+from datetime import timedelta
 
 from .version import __version__
 
@@ -26,7 +26,7 @@ def main():
     args = getOptions()
     in_filename_path, out_filename_path, _ = ProcessStep.setup_paths(args)
 
-    for filename in args.infiles:
+    for filename in args.input_files:
         with open(os.path.join(in_filename_path, filename),
                   'rb') as fp:
             print('-'*60)
@@ -41,7 +41,7 @@ def getOptions():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("infiles", metavar="inFileName", nargs='+',
+    parser.add_argument("input_files", metavar="inFileName", nargs='+',
                         help="Input filename(s)")
     parser.add_argument("-d", dest="base_dir", metavar="BASE_DIR",
                         default='.', help="base directory for files")
@@ -64,8 +64,8 @@ def _get_times(fp, block_num, samp_rate):
     lcData.seekBlock(fp, block_num)
     lcData.readBlock(fp)
     first_time = lcData.getDateTime()
-    last_time = first_time + datetime.timedelta(
-        seconds=lcData.numberOfSamples / samp_rate)
+    last_time = first_time + timedelta(seconds=lcData.numberOfSamples
+                                               / samp_rate)
     return first_time, last_time
 
 
@@ -77,8 +77,8 @@ def _print_Info(fp):
     lcHeader.seekHeaderPosition(fp)
     status = lcHeader.readHeader(fp)
     if status == 0:
-        print("Assuming file has no header, wish me luck...")
-        first data_block = 0
+        print("Assuming data blocks start at block 0, wish me luck...")
+        first_data_block = 0
         n_channels, sample_rate = _estimate_parms(fp, first_data_block)
     else:
         sample_rate = lcHeader.realSampleRate
@@ -102,19 +102,23 @@ def _estimate_parms(fp, first_data_block, imax=10):
     base_sample_rate = 62.5
     n_samples = 166
     n_channels = 1
-    for i in range(imax)
+    for i in range(imax):
         lcData.seekBlock(fp, i)
         lcData.readBlock(fp)
-        if lcData.muxChannel+1 > n_channels:
-            nchannels = lcData.muxChannel + 1
-    if nchannels >=imax:
+        # lcData.prettyPrintHeader()
+        if lcData.muxChannel + 1 > n_channels:
+            n_channels = lcData.muxChannel + 1
+    # print(f'{n_channels=}')
+    if n_channels >=imax:
         raise ValueError('File indicates more channels {:d} than tested {:d}'
-                         .format(nchannels, imax))
-    sample_rate = n_samples / (_get_times(fp, n_channels, 1)[0]
-                               - _get_times(fp, 0, 1)[0])
+                         .format(n_channels, imax))
+    block_timedelta = (_get_times(fp, first_data_block + n_channels, 1)[0]
+                       - _get_times(fp, first_data_block, 1)[0])
+    # print(f'{block_timedelta=}')
+    sample_rate = n_samples / ((block_timedelta/timedelta(milliseconds=1))/1000)
     rate_multiplier = sample_rate/base_sample_rate
-    if not rate_multiplier == floor(rate_multiplier)
-        rase ValueError('Sample rate ({:f}) is not a multiple of {:f}'
+    if not rate_multiplier == int(rate_multiplier):
+        raise ValueError('Sample rate ({:f}) is not a multiple of {:f}'
                         .format (sample_rate, base_sample_rate))
     return n_channels, sample_rate
 

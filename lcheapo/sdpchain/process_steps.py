@@ -168,25 +168,32 @@ class ProcessStep:
         """
         if not hasattr(args, "base_dir"):
             raise NameError('args has no base_dir attribute')
+
+        # Work on in_dir
         if not hasattr(args, "in_dir"):
             raise NameError('args has no in_dir attribute')
-        if not hasattr(args, "out_dir"):
-            raise NameError('args has no out_dir attribute')
-        if not hasattr(args, "input_files"):
-            raise NameError('args has no out_dir attribute')
         in_path = _choose_path(args.base_dir, args.in_dir)
-        out_path = _choose_path(args.base_dir, args.out_dir)
         assert Path(in_path).is_dir() is True
-        assert not Path(out_path).is_file()
-        if Path(out_path).exists() is False:
-            if verbose:
-                print(f"out_dir '{out_path}' does not exist, creating...")
-            Path(out_path).mkdir(parents=True)
+
+        # Work on input_files
+        if not hasattr(args, "input_files"):
+            raise NameError('args has no input_files attribute')
         if expand_wildcards is True:
             input_files = [x.name for f in args.input_files
                            for x in Path(in_path).glob(f)]
         else:
             input_files = args.input_files
+            
+        # Work on out_dir
+        if not hasattr(args, "out_dir"):
+            return in_path, None, input_files
+        out_path = _choose_path(args.base_dir, args.out_dir)
+        assert not Path(out_path).is_file()
+        if Path(out_path).exists() is False:
+            if verbose:
+                print(f"out_dir '{out_path}' does not exist, creating...")
+            Path(out_path).mkdir(parents=True)
+
         return in_path, out_path, input_files
     
 def _choose_path(base_dir, sub_dir):
