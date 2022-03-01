@@ -134,44 +134,46 @@ output.  There are 4 main sections in each file:
 
 ### Example plots
 
-#### Time series
-```
-        -   description: "Entire time series"
-            select: {station: "*"}
-            start_time: "2022-02-22T10:00:01"
-            end_time: "2022-02-25T15:25:25"
-```
+### Examples
 
-![](README_images/BB02-V1_3-tests_Entire_time_series_ts.png)
+#### 1: Analysing one station
 
-```
-        -   description: "Quiet time"
-            select: {station: "*"}
-            start_time: "2022-02-23T21:00:00"
-            end_time: "2022-02-24T03:00:00"
-```
-
-![](README_images/BB02-V1_3-tests_Quiet_time_ts.png)
-
-#### spectra
-
-```
+``` yaml
+---
+input: 
+    start_time: "2022-02-22T10:00:01"
+    end_time: "2022-02-25T15:25:25"
+    datafiles:
+        -   name: "TestAcq-BB02-ProgV1-3.raw.lch"
+            obs_type: 'BBOBS1'
+            station: 'TEST'
+    description: "Tests on BBOBS"
+output:
+    show: True
+    filebase: 'BB02-V1_3-tests'
 plot_globals:
     spectra:
         window_length.s: 1024
 plots:
+    time_series:
+        -   description: "Entire time series"
+            select: {station: "*"}
+            start_time: "2022-02-22T10:00:01"
+            end_time: "2022-02-25T15:25:25"
+        -   description: "Quiet time"
+            select: {station: "*"}
+            start_time: "2022-02-23T21:00:00"
+            end_time: "2022-02-24T03:00:00"
+        -   description: "Stack time"
+            select: {station: "*"}
+            start_time: "2022-02-25T13:54:00"
+            end_time: "2022-02-25T14:03:00"
     spectra:
         -   description: "Quiet time"
             select: {station: "*"}
             start_time: "2022-02-23T21:00:00"
             end_time: "2022-02-24T03:00:00"
-```
-
-![](README_images/BB02-V1_3-tests_Quiet_time_spect.png)
-
-#### stack
-
-```
+    stack:
         -   description: "Stack, Jump South"
             orientation_codes: ["Z"]
             offset_before.s: 0.3
@@ -180,13 +182,15 @@ plots:
             -    "2022-02-25T13:57:00.66"
             -    "2022-02-25T13:58:00.53"
             -    "2022-02-25T13:59:00.2"
-```
-
-![](README_images/BB02-V1_3-tests_Stack_Jump_South_stack.png)
-
-#### particle_motion
-
-```
+        -   description: "Stack, Jump Est"
+            orientation_codes: ["Z"]
+            offset_before.s: 0.3
+            offset_after.s: 1
+            times:
+            -    "2022-02-25T14:00:00.4"
+            -    "2022-02-25T14:01:00.15"
+            -    "2022-02-25T14:02:00.18"
+    particle_motion:
         -   description: "Stack, Jump South"
             orientation_code_x: "2"
             orientation_code_y: "1"
@@ -198,85 +202,40 @@ plots:
             -    "2022-02-25T13:57:00.66"
             -    "2022-02-25T13:58:00.53"
             -    "2022-02-25T13:59:00.2"
+        -   description: "Stack, Jump Est"
+            orientation_code_x: "2"
+            orientation_code_y: "1"
+            offset_before.s: 0.1
+            offset_after.s: 0.2
+            offset_before_ts.s: 0.3
+            offset_after_ts.s: 1
+            times:
+            -    "2022-02-25T14:00:00.4"
+            -    "2022-02-25T14:01:00.15"
+            -    "2022-02-25T14:02:00.18"
 ```
+##### Output plots
+###### time_series
+![](README_images/BB02-V1_3-tests_Entire_time_series_ts.png)
+![](README_images/BB02-V1_3-tests_Quiet_time_ts.png)
 
+###### spectra
+![](README_images/BB02-V1_3-tests_Quiet_time_spect.png)
+
+###### stack
+![](README_images/BB02-V1_3-tests_Stack_Jump_South_stack.png)
+
+###### particle_motion
 ![](README_images/BB02-V1_3-tests_Stack_Jump_South_pm.png)
 
-### Examples
-
-#### 1: Analysing one station
-
-``` yaml
----
-input:
-    start_time: 0
-    end_time: 0
-    datafiles:
-        -   name: "Data_BB07_04_10_12.raw.lch"
-            obs_type: "BBOBS"
-            station: "TEST"
-    description: "Tests on BBOBS"
-output:
-    show: True
-    filebase: "BB07tests"
-plot_globals:
-    spectra:
-        window_length.s: 1024
-plots:
-    time_series:
-        -   description: "Entire time series"
-            select: {station: "*"}
-            start_time: null
-            end_time: null
-        -   description: "Quiet time"
-            select: {station: "*"}
-            start_time: "2012-10-05T02:00:00"
-            end_time: "2012-10-05T03:05:00"
-        -   description: "Fake stack time"
-            select: {station: "*"}
-            start_time: "2012-10-05T05:12:00"
-            end_time: "2012-10-05T05:21:00"
-    spectra:
-        -   description: "Quiet time"
-            select: {station: "*"}
-            start_time: "2012-10-05T02:00:00"
-            end_time: "2012-10-05T03:05:00"
-    stack:
-        -   description: "Fake stack, no tests run"
-            orientation_codes: ["Z"]
-            offset_before.s: 1
-            offset_after.s: 5
-            times: 
-                - "2012-10-05T05:12:10"
-                - "2012-10-05T05:13:50"
-                - "2012-10-05T05:17:55"
-                - "2012-10-05T05:20:25"
-    particle_motion:
-        -   description: "rubber hammer tap from S* to N*"
-            orientation_code_y: "1"
-            orientation_code_x: "2"
-            times: 
-                - "2019-11-07T14:09:16.65"
-                - "2019-11-07T14:09:26.55"
-                - "2019-11-07T14:09:36.5"
-                - "2019-11-07T14:09:46.75"
-                - "2019-11-07T14:09:56.75"
-        -   description: "rubber hammer tap from W* to E*"
-            orientation_code_y: "1"
-            orientation_code_x: "2"
-            times: 
-                - "2019-11-07T14:10:49.35"
-                - "2019-11-07T14:10:59.55"
-                - "2019-11-07T14:10:39.53"
-```
 
 #### 2: Comparing several stations
 
 ```yaml
 ---
 input:
-    starttime: null
-    endtime: null
+    start_time: null
+    end_time: null
     datafiles:
         - 
             name: "20191107T14_SPOBS09_F02.raw.lch"
