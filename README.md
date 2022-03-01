@@ -141,6 +141,7 @@ output.  There are 4 main sections in each file:
             start_time: "2022-02-22T10:00:01"
             end_time: "2022-02-25T15:25:25"
 ```
+
 ![](README_images/BB02-V1_3-tests_Entire_time_series_ts.png)
 
 ```
@@ -149,7 +150,11 @@ output.  There are 4 main sections in each file:
             start_time: "2022-02-23T21:00:00"
             end_time: "2022-02-24T03:00:00"
 ```
+
+![](README_images/BB02-V1_3-tests_Quiet_time_ts.png)
+
 #### spectra
+
 ```
 plot_globals:
     spectra:
@@ -161,7 +166,11 @@ plots:
             start_time: "2022-02-23T21:00:00"
             end_time: "2022-02-24T03:00:00"
 ```
+
+![](README_images/BB02-V1_3-tests_Quiet_time_spect.png)
+
 #### stack
+
 ```
         -   description: "Stack, Jump South"
             orientation_codes: ["Z"]
@@ -173,7 +182,10 @@ plots:
             -    "2022-02-25T13:59:00.2"
 ```
 
+![](README_images/BB02-V1_3-tests_Stack_Jump_South_stack.png)
+
 #### particle_motion
+
 ```
         -   description: "Stack, Jump South"
             orientation_code_x: "2"
@@ -187,6 +199,8 @@ plots:
             -    "2022-02-25T13:58:00.53"
             -    "2022-02-25T13:59:00.2"
 ```
+
+![](README_images/BB02-V1_3-tests_Stack_Jump_South_pm.png)
 
 ### Examples
 
