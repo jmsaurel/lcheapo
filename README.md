@@ -132,6 +132,62 @@ output.  There are 4 main sections in each file:
   - **``plot_globals``**: Default values for each type of plot.  Use the
     same names and values as for **``plots``**
 
+### Example plots
+
+#### Time series
+```
+        -   description: "Entire time series"
+            select: {station: "*"}
+            start_time: "2022-02-22T10:00:01"
+            end_time: "2022-02-25T15:25:25"
+```
+![](README_images/BB02-V1_3-tests_Entire_time_series_ts.png)
+
+```
+        -   description: "Quiet time"
+            select: {station: "*"}
+            start_time: "2022-02-23T21:00:00"
+            end_time: "2022-02-24T03:00:00"
+```
+#### spectra
+```
+plot_globals:
+    spectra:
+        window_length.s: 1024
+plots:
+    spectra:
+        -   description: "Quiet time"
+            select: {station: "*"}
+            start_time: "2022-02-23T21:00:00"
+            end_time: "2022-02-24T03:00:00"
+```
+#### stack
+```
+        -   description: "Stack, Jump South"
+            orientation_codes: ["Z"]
+            offset_before.s: 0.3
+            offset_after.s: 1
+            times:
+            -    "2022-02-25T13:57:00.66"
+            -    "2022-02-25T13:58:00.53"
+            -    "2022-02-25T13:59:00.2"
+```
+
+#### particle_motion
+```
+        -   description: "Stack, Jump South"
+            orientation_code_x: "2"
+            orientation_code_y: "1"
+            offset_before.s: 0.00
+            offset_after.s: 0.03
+            offset_before_ts.s: 0.2
+            offset_after_ts.s: 1
+            times:
+            -    "2022-02-25T13:57:00.66"
+            -    "2022-02-25T13:58:00.53"
+            -    "2022-02-25T13:59:00.2"
+```
+
 ### Examples
 
 #### 1: Analysing one station
@@ -139,8 +195,8 @@ output.  There are 4 main sections in each file:
 ``` yaml
 ---
 input:
-    starttime: 0
-    endtime: 0
+    start_time: 0
+    end_time: 0
     datafiles:
         -   name: "Data_BB07_04_10_12.raw.lch"
             obs_type: "BBOBS"

@@ -66,7 +66,7 @@ def main():
         for plot in root['plots']['particle_motion']:
             tracex = _trace_component(stream, plot['orientation_code_x'])
             tracey = _trace_component(stream, plot['orientation_code_y'])
-            globs = plot_globals['particle_motion']
+            globs = plot_globals.get('particle_motion', None)
             plot_particle_motion(
                 tracex, tracey, [UTCDateTime(t) for t in plot['times']],
                 plot['description'],
