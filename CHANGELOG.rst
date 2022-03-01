@@ -21,14 +21,15 @@ First distributed
 
 v1.0
 ------
+
 - b0: Combined lcheapo and lcheapo_obspy
 - .0: Fixed some bugs associated with creation of the ProcessSteps class
 - 1.0.1: Fixed bugs where lcheapo_obspy was still called, harmonized start_time
-         in input file
+  in input file
 - 1.0.2: Fixed a bug in accessing sdpchain library (affected lcinfo lcfix...)
 - 1.0.3: Patch because 1.0.2 on PyPI was bad
-- 1.0.4: Further cleaned up references to sdpchain, changed setup.py to
-         automatically find modules (manual system used before didn't put
+- 1.0.4: Further cleaned references to sdpchain, changed setup.py to
+  automatically find modules (manual system used before didn't put
          sdpchain/ on PyPI)
 - 1.0.5: 
     - Changed required python version to 3.8 (some files use '=' specifier
