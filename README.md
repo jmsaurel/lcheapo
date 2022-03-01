@@ -216,17 +216,17 @@ plots:
 ```
 ##### Output plots
 ###### time_series
-![](README_images/BB02-V1_3-tests_Entire_time_series_ts.png)
-![](README_images/BB02-V1_3-tests_Quiet_time_ts.png)
+![](https://github.com/WayneCrawford/lcheapo/raw/main/README_images/BB02-V1_3-tests_Entire_time_series_ts.png)
+![](https://github.com/WayneCrawford/lcheapo/raw/main/README_images/BB02-V1_3-tests_Quiet_time_ts.png)
 
 ###### spectra
-![](README_images/BB02-V1_3-tests_Quiet_time_spect.png)
+![](https://github.com/WayneCrawford/lcheapo/raw/main/README_images/BB02-V1_3-tests_Quiet_time_spect.png)
 
 ###### stack
-![](README_images/BB02-V1_3-tests_Stack_Jump_South_stack.png)
+![](https://github.com/WayneCrawford/lcheapo/raw/main/README_images/BB02-V1_3-tests_Stack_Jump_South_stack.png)
 
 ###### particle_motion
-![](README_images/BB02-V1_3-tests_Stack_Jump_South_pm.png)
+![](https://github.com/WayneCrawford/lcheapo/raw/main/README_images/BB02-V1_3-tests_Stack_Jump_South_pm.png)
 
 
 #### 2: Comparing several stations
