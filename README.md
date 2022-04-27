@@ -39,7 +39,9 @@ compliant data:
 ## lctest control files
 
 lctest uses YAML-format control files to indicate what kind of plots to
-output.  There are 4 main sections in each file:
+output.  The datetime ranges in the `plots` sections must be within those given in the `input` section, as data is only read using the `input` time bounds.
+
+There are 4 main sections in each file:
 
   - **``input``**: input data parameters
       - **``start_time``**: start time to read (0 means from the beginning

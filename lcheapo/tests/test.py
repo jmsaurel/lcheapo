@@ -8,12 +8,14 @@ Functions to test the lcheapo functions
 # from future.builtins import *  # NOQA @UnusedWildImport
 
 import os
+from pathlib import Path
 import unittest
 import filecmp
 import inspect
 import difflib
 # import json
 import glob
+import subprocess
 
 from lcheapo.lcread import read as lcread, band_code_sps
 from lcheapo.yaml_json import validate
@@ -26,11 +28,9 @@ class TestAllMethods(unittest.TestCase):
     Test suite for lcheapo_obspy.
     """
     def setUp(self):
-        self.path = os.path.dirname(os.path.abspath(inspect.getfile(
-            inspect.currentframe())))
-        self.testing_path = os.path.join(self.path, "data")
-        self.exec_path = os.path.split(self.path)[0]
-        self.examples_path = os.path.join(self.exec_path, '_examples')
+        self.path = Path(__file__).parent.resolve()
+        self.testing_path = self.path / "data"
+        self.examples_path = self.path.parent / '_examples'
 
     def assertTextFilesEqual(self, first, second, msg=None):
         first_f = open(first)
@@ -65,9 +65,8 @@ class TestAllMethods(unittest.TestCase):
         miniSEED file
         """
         test_fname = 'XX.TEST.2019-11-07.mseed'
-        infile = os.path.join(self.examples_path,
-                              '20191107T14_SPOBS09_F02.raw.lch')
-        compare_file = os.path.join(self.testing_path, test_fname)
+        infile = str(self.examples_path / '20191107T14_SPOBS09_F02.raw.lch')
+        compare_file = str(self.testing_path / test_fname)
         stream = lcread(infile, station='TEST', network='XX',
                         obs_type='SPOBS2')
         stream.write(test_fname, 'MSEED', encoding='STEIM1', byteorder='<')
@@ -76,7 +75,7 @@ class TestAllMethods(unittest.TestCase):
 
     def test_lctest_validate(self):
         """validate lctest YAML files in _examples directory"""
-        for f in glob.glob(os.path.join(self.examples_path, '*.yaml')):
+        for f in glob.glob(str(self.examples_path / '*.yaml')):
             validate(f, quiet=True)
 
     def test_band_code_sps(self):
@@ -117,6 +116,16 @@ class TestAllMethods(unittest.TestCase):
         self.assertEqual(_leap_correct(UTCDateTime('2021-01-01'), lstm, lstp), -1)
         self.assertEqual(_leap_correct(UTCDateTime('2021-04-01'), lstm, lstp), -1)
         self.assertEqual(_leap_correct(UTCDateTime('2021-07-01'), lstm, lstp), 0)
+        
+    def test_lccut(self):
+        """ test lccut command-line """
+        cmd = (f'lccut -d {str(self.path)} -i data --start 5000 --end 5099 '
+                '--of test.lch --quiet BUGGY.fix.lch')
+        subprocess.run(cmd, shell=True, check=True)
+        self.assertBinFilesEqual(self.path / 'data' / 'BUGGY.fix_5000_5099.lch',
+                                 self.path / 'test.lch')
+        self.path.joinpath('test.lch').unlink()
+        self.path.joinpath('process-steps.json').unlink()
         
     # TESTS TO ADD:
     # def test_lcplot(self):

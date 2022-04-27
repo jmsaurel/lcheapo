@@ -86,6 +86,7 @@
             "type": "object",
             "description": "Global parameters for spectra plots",
             "properties": {
+                "overlay":    {"type": "boolean"},
                 "window_length.s": {"$ref": "#/definitions/window_length_s"}
             },
             "additionalProperties" : false
@@ -160,6 +161,7 @@
                 "select":      {"$ref": "#/definitions/stream_select"},
                 "start_time":  {"$ref": "#/definitions/date-time"},
                 "end_time":    {"$ref": "#/definitions/date-time"},
+                "overlay":    {"type": "boolean"},
                 "window_length.s": {"$ref": "#/definitions/window_length_s"}
             },
             "additionalProperties" : false

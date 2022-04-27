@@ -39,7 +39,7 @@ def lc2SDS():
     parser = argparse.ArgumentParser(
         description=inspect.cleandoc(lc2SDS.__doc__),
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("infiles", nargs='+',
+    parser.add_argument("input_files", nargs='+',
                         help="Input filename(s).  If there are captured "
                              "wildcards (put in '' so that they aren't "
                              "interpreted by the shell), will expand them "
@@ -99,12 +99,12 @@ def lc2SDS():
                                app_description=__doc__,
                                app_version=__version__,
                                parameters=parameters)
-    args.in_dir, args.out_dir, args.infiles = ProcessStep.setup_paths(args)
+    args.in_dir, args.out_dir, args.input_files = ProcessStep.setup_paths(args)
     # Expand captured wildcards
-    #args.infiles = [x.name for f in args.infiles
+    #args.input_files = [x.name for f in args.input_files
     #                for x in Path(args.in_dir).glob(f)]
 
-    for infile in args.infiles:
+    for infile in args.input_files:
         lc_start, lc_end = get_data_timelimits(Path(args.in_dir) / infile)
 
         if args.start_times and args.end_times:

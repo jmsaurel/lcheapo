@@ -7,13 +7,11 @@ Read LCHEAPO data into an obspy stream
 #                         unicode_literals)
 # from future.builtins import *  # NOQA @UnusedWildImport
 
-import argparse
 import warnings
 import struct
 import os
 import sys
 import inspect
-import re
 
 import numpy as np
 from obspy.core import UTCDateTime, Stream, Trace
@@ -27,7 +25,7 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
          obs_type=None, verbose=False):
     """
     Read LCHEAPO data into an obspy stream
-    
+
     To avoid overlaps, starttime is inclusive and endtime is exclusive
 
     :param filename: LCHEAPO filename
@@ -114,8 +112,8 @@ def get_data_timelimits(lcheapo_object):
 def _read_data(starttime, endtime, fp, verbose=False):
     """
     Return data.
-    
-    Returns from the start of the block containing starttime to the end of the 
+
+    Returns from the start of the block containing starttime to the end of the
     block containing endtime
 
     :param starttime: start time
@@ -125,7 +123,7 @@ def _read_data(starttime, endtime, fp, verbose=False):
     :param fp: file pointer
     :type  fp: class `file`
     :rtype: ~class `obspy.core.Stream`
-    
+
     For speed, reads all blocks at once and extracts as slices
     """
     starttime, endtime = _convert_time_bounds(starttime, endtime, fp)
@@ -190,7 +188,7 @@ def _read_data(starttime, endtime, fp, verbose=False):
                        dtype='int32')
         stream.append(Trace(data=t32, header=stats))
     eps = 1e-6
-    stream.trim(starttime=starttime, endtime=endtime-eps, nearest_sample=False)    
+    stream.trim(starttime=starttime, endtime=endtime-eps, nearest_sample=False)
     return stream
 
 
@@ -252,8 +250,8 @@ def _convert_time_bounds(starttime, endtime, fp):
         endtime = starttime + endtime
     # Handle bad time ranges
     if endtime <= starttime:
-         print("{endtime=} is before {starttime=}")
-         return None, None
+        print("{endtime=} is before {starttime=}")
+        return None, None
     if starttime >= data_end:
         print(f"{starttime=} is after {data_end}=")
         return None, None
@@ -352,7 +350,8 @@ def band_code_sps(band_code, sps):
         elif sps >= 10:
             return "S"
         else:
-            raise NameError("You should not have short period data at < 10 sps")
+            raise NameError(
+                "You should not have short period data at < 10 sps")
     elif band_code in band_codes_LP:
         if sps >= 1000:
             return "F"
@@ -439,6 +438,12 @@ def _valid_chan_map(chan_map):
                         return True
     return False
 
+### THE FOLLOWING DUPICATES LCPLOT.PY BECAUSE I CAN'T CHANGE MODULE REFERENCES
+### WITHOUT INTERNET
+
+
+import argparse
+import re
 
 def _plot_command():
     """
@@ -538,9 +543,11 @@ def _plot_command():
             stream += s
             station_code = None
     if len(stream) > 0:
-        stream.plot(size=(800, 600), equal_scale=args.equal_scale, method='full')
+        stream.plot(size=(800, 600), equal_scale=args.equal_scale,
+                    method='full')
     else:
         print('Nothing read, nothing plotted!')
+
 
 def _normalize_time_arg(a):
     """
@@ -554,6 +561,8 @@ def _normalize_time_arg(a):
         return a
     else:
         return temp
+
+
 
 # ---------------------------------------------------------------------------
 # Run 'main' if the script is not imported as a module

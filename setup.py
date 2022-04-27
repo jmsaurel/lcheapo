@@ -28,7 +28,8 @@ setuptools.setup(
           'jsonschema>=2.6',
           'jsonref>=0.2',
           'progress>=1.5',
-          'lcheapo>=0.73'
+          'lcheapo>=0.73',
+          'crawtools>=0.1'
       ],
     entry_points={
          'console_scripts': [
@@ -39,7 +40,7 @@ setuptools.setup(
              'lccut=lcheapo.lccut:main',
              'lcinfo=lcheapo.lcinfo:main',
              'lcheader=lcheapo.lcheader:main',
-             'lcplot=lcheapo.lcread:_plot_command',
+             'lcplot=lcheapo.lcplot:main',
              'lc2SDS_weak=lcheapo.lc2SDS:lc2SDS',
              'lc2ms_weak=lcheapo.lc2ms:lc2ms',
              'lctest=lcheapo.lctest:main',

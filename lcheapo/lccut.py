@@ -42,7 +42,7 @@ def main():
         print('output file {out_path} exists already, quitting...')
         sys.exit(2)
 
-    with open(Path(args.in_dir) / args.in_fname, 'rb') as fp:
+    with open(Path(args.in_dir) / args.input_files[0], 'rb') as fp:
         # Set/validate last block to read
         fp.seek(0, 2)   # End of file
         last_file_block = floor(fp.tell()/BLOCK_SIZE)-1
@@ -67,7 +67,8 @@ def main():
         else:
             msg = 'Writing blocks {:d}-{:d} to {}'.format(
                 args.start, args.end, args.output_file)
-            print(msg)
+            if args.quiet is False:
+                print(msg)
             exec_messages.append(msg)
             with open(out_path, 'wb') as of:
                 start_block = args.start
@@ -96,7 +97,7 @@ def getOptions():
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("in_fname", help="Input filename")
+    parser.add_argument("input_files", nargs=1, help="Input filename")
     parser.add_argument("--of", dest="output_file", default="",
                         help="""
                         Output filename.  If not provided, writes to
@@ -114,6 +115,8 @@ def getOptions():
                         help="path to input files (abs, or rel to base)")
     parser.add_argument("-o", "--output", dest="out_dir", default='.',
                         help="path for output files (abs, or rel to base)")
+    parser.add_argument("--quiet", action='store_true',
+                        help="Don't print to stdout for normal operation")
     args = parser.parse_args()
     global process_step
     process_step = ProcessStep('lccut',
