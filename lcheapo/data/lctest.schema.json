@@ -15,10 +15,8 @@
         "input": {
             "type": "object",
             "description": "Parameters for reading in the data",
-            "required": ["start_time", "end_time", "datafiles"],
+            "required": ["datafiles"],
             "properties": {
-                "start_time":   {"$ref": "#/definitions/date-time_or_num"},
-                "end_time":     {"$ref": "#/definitions/date-time_or_num"},
                 "datafiles":   {"$ref": "#/definitions/datafiles"},
                 "description": {"type": "string"}
             },
@@ -48,46 +46,30 @@
             "type": "object",
             "description": "Global parameters for plots",
             "properties": {
-                "stack":           {"$ref": "#/definitions/stack_globals"},
-                "particle_motion": {"$ref": "#/definitions/particle_motion_globals"},
-                "spectra":         {"$ref": "#/definitions/spectra_globals"}
-            },
-            "additionalProperties" : false
-        },
-        "stack_globals": {
-            "type": "object",
-            "description": "Global parameters for stack plots",
-            "properties": {
-                "offset_before.s": {"type": "number"},
-                "offset_after.s":  {"type": "number"},
-                "plot_span":       {"type": "boolean",
-                                    "description": "Make a time series plot spanning the stacks?"}
-            },
-            "additionalProperties" : false
-        },
-        "particle_motion_globals": {
-            "type": "object",
-            "description": "Global parameters for particle motion plots",
-            "properties": {
-                "offset_before.s": {
-                    "type": "number",
-                    "description": "for particle motion subplot"
+                "stack": {
+                    "allOf": [
+                        {"$ref": "#/definitions/stack"},
+                        {"properties": {"required": []}}
+                    ]
                 },
-                "offset_after.s":     {"type": "number"},
-                "offset_before_ts.s": {
-                    "type": "number",
-                    "description": "for time_series subplots"
+                "particle_motion": {
+                    "allOf": [
+                        {"$ref": "#/definitions/particle_motion"},
+                        {"properties": {"required": []}}
+                    ]
                 },
-                "offset_after_ts.s":  {"type": "number"}
-            },
-            "additionalProperties" : false
-        },
-        "spectra_globals": {
-            "type": "object",
-            "description": "Global parameters for spectra plots",
-            "properties": {
-                "overlay":    {"type": "boolean"},
-                "window_length.s": {"$ref": "#/definitions/window_length_s"}
+                "time_series": {
+                    "allOf": [
+                        {"$ref": "#/definitions/time_series"},
+                        {"properties": {"required": []}}
+                    ]
+                },
+                "spectra": {
+                    "allOf": [
+                        {"$ref": "#/definitions/spectra"},
+                        {"properties": {"required": []}}
+                    ]
+                }
             },
             "additionalProperties" : false
         },
@@ -101,47 +83,57 @@
                 "particle_motion": {"$ref": "#/definitions/particle_motion_list"}
             }
         },
-       "plots_old": {
-           "type": "array",
-           "description":" list of plots",
-           "minItems" : 1,
-           "items" : { 
-                "oneOf": [
-                    {"$ref": "#/definitions/time_series"},
-                    {"$ref": "#/definitions/spectra"},
-                    {"$ref": "#/definitions/stack"},
-                    {"$ref": "#/definitions/particle_motion"}
-                ]
-            }
-        },
        "time_series_list": {
            "type":        "array",
            "description": "list of time series plots",
            "minItems":    1,
-           "items":       {"$ref": "#/definitions/time_series"}
+           "items":       {
+                "allOf": [
+                    {"$ref": "#/definitions/time_series"},
+                    {"properties": {"required": ["description", "start_time",
+                                                "end_time"]}}
+                ]
+            }
         },
        "spectra_list": {
            "type":        "array",
            "description": "list of spectra plots",
            "minItems":    1,
-           "items":       {"$ref": "#/definitions/spectra"}
+           "items":       {
+                "allOf": [
+                    {"$ref": "#/definitions/spectra"},
+                    {"properties": {"required": ["description", "start_time",
+                                                 "end_time"]}}
+                ]
+            }
         },
        "stack_list": {
            "type":        "array",
            "description": "list of stack plots",
            "minItems":    1,
-           "items":       {"$ref": "#/definitions/stack"}
+           "items":       {
+                "allOf": [
+                    {"$ref": "#/definitions/stack"},
+                    {"properties": {"required": ["description", "components",
+                                                "times"]}}
+                ]
+            }
         },
        "particle_motion_list": {
            "type":        "array",
            "description": "list of particle motion plots",
            "minItems":    1,
-           "items":       {"$ref": "#/definitions/particle_motion"}
+           "items":       {
+                "allOf": [
+                    {"$ref": "#/definitions/particle_motion"},
+                    {"properties": {"required": ["description", "component_x",
+                                                "component_y", "times"]}}
+                ]
+            }
         },
         "time_series": {
             "type": "object",
             "description": "Time series plot",
-            "required": ["description"],
             "properties": {
                 "plot_type":   {"type": "string", "enum": ["time_series"]},
                 "description": {"type": "string"},
@@ -154,7 +146,6 @@
         "spectra": {
             "type": "object",
             "description": "Spectra plot",
-            "required": ["description"],
             "properties": {
                 "plot_type":   {"type": "string", "enum": ["spectra"]},
                 "description": {"type": "string"},
@@ -169,17 +160,17 @@
         "stack": {
             "type": "object",
             "description": "Spectra plot",
-            "required": ["description", "orientation_codes", "times"],
             "properties": {
-                "plot_type":         {"type": "string", "enum": ["stack"]},
-                "description":       {"type": "string"},
-                "orientation_codes": {"$ref": "#/definitions/orientation_codes"},
-                "times":             {"$ref": "#/definitions/times_list"},
-                "offset_before.s":   {"type": "number"},
-                "offset_after.s":    {"type": "number"},
+                "plot_type":       {"type": "string", "enum": ["stack"]},
+                "description":     {"type": "string"},
+                "select":          {"$ref": "#/definitions/stream_select"},
+                "components":      {"$ref": "#/definitions/components"},
+                "times":           {"$ref": "#/definitions/times_list"},
+                "offset_before.s": {"type": "number"},
+                "offset_after.s":  {"type": "number"},
                 "plot_span": {
                     "type": "boolean",
-                    "description": "Make a time series plot spanning the stacks?"
+                    "description": "Plot time series spanning the stacks"
                 }
             },
             "additionalProperties" : false
@@ -187,22 +178,17 @@
         "particle_motion": {
             "type": "object",
             "description": "Particle motion plot",
-            "required": ["description", "orientation_code_x",
-                         "orientation_code_y", "times"],
             "properties": {
                 "plot_type":          {"type": "string", "enum": ["particle_motion"]},
                 "description":        {"type": "string"},
-                "orientation_code_x": {"type": "string", "length": 1},
-                "orientation_code_y": {"type": "string", "length": 1},
+                "component_x":        {"type": "string", "length": 1},
+                "component_y":        {"type": "string", "length": 1},
+                "select":             {"$ref": "#/definitions/stream_select"},
                 "times":              {"$ref": "#/definitions/times_list"},
-                "offset_before.s":    {
-                    "type": "number",
-                    "description": "for particle motion subplot"},
-                "offset_after.s":     {"type": "number"},
-                "offset_before_ts.s": {
-                    "type": "number",
-                    "description": "for time_series subplots"},
-                "offset_after_ts.s":  {"type": "number"}
+                "particle_offset_before.s": {"type": "number"},
+                "particle_offset_after.s":  {"type": "number"},
+                "offset_before.s":    {"type": "number"},
+                "offset_after.s":    {"type": "number"}
             },
             "additionalProperties" : false
         },
@@ -225,10 +211,10 @@
             },
             "additionalProperties" : false
         },
-        "orientation_codes": {
+        "components": {
             "type": "array",
             "minLength": 1,
-            "description": "orientation codes to plot (separately)",
+            "description": "components to plot (separately)",
             "items" : {"type": "string", "length": 1}            
         },
         "window_length_s": {
@@ -256,6 +242,45 @@
                 {"$ref": "#/definitions/date-time"},
                 {"type" : "number"}
             ]
+        }
+    },
+    "trash" : {
+        "stack_globals": {
+            "type": "object",
+            "description": "Global parameters for stack plots",
+            "properties": {
+                "offset_before.s": {"type": "number"},
+                "offset_after.s":  {"type": "number"},
+                "plot_span":       {"type": "boolean",
+                                    "description": "Make a time series plot spanning the stacks?"}
+            },
+            "additionalProperties" : false
+        },
+        "particle_motion_globals": {
+            "type": "object",
+            "description": "Global parameters for particle motion plots",
+            "properties": {
+                "particle offset_before.s": {
+                    "type": "number",
+                    "description": "for particle motion subplot"
+                },
+                "particle_offset_after.s":     {"type": "number"},
+                "offset_before.s": {
+                    "type": "number",
+                    "description": "for time_series subplots"
+                },
+                "offset_after.s":  {"type": "number"}
+            },
+            "additionalProperties" : false
+        },
+        "spectra_globals": {
+            "type": "object",
+            "description": "Global parameters for spectra plots",
+            "properties": {
+                "overlay":    {"type": "boolean"},
+                "window_length.s": {"$ref": "#/definitions/window_length_s"}
+            },
+            "additionalProperties" : false
         }
     }
 }

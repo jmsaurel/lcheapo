@@ -5,10 +5,6 @@ Cut an LCHEAPO file into pieces
 
 Used to remove bad/empty blocks, blocks start with 0 and are 512-bytes
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import argparse
 import copy
 # import os

@@ -3,10 +3,6 @@
 """
 Data access for lcheapo files
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import sys
 import datetime
 import struct

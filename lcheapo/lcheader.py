@@ -3,10 +3,6 @@
 """
 Create/modify an LCHEAPO data file header
 """
-# from __future__ import (absolute_import, division, print_function,
-#                         unicode_literals)
-# from future.builtins import *  # NOQA @UnusedWildImport
-
 import sys
 import copy
 # import os

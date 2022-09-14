@@ -3,9 +3,6 @@
 """
 Dump record information from an LCHEAPO file
 """
-# from __future__ import (absolute_import, division, print_function,
-#                         unicode_literals)
-# from future.builtins import *  # NOQA @UnusedWildImport
 from pathlib import Path
 
 import sys

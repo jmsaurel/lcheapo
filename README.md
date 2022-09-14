@@ -8,8 +8,7 @@ Viewing and modifying LCHEAPO OBS data
 
 Type ``{command} -h`` to get a list of parameters and options
 
-#### Non-modifying programs
-View the files and/or their data
+#### Programs that don't modify files
 
 | Program     | description                                           |
 | ----------- | ----------------------------------------------------- |
@@ -19,8 +18,9 @@ View the files and/or their data
 | lctest      | plot LCHEAPO tests                                    |
 | lc_examples | create a directory with examples of lcplot and lctest |
 
-#### Modifying programs
-Change the files and/or their data.  Use the *SDPCHAIN* protocols for FAIR-
+#### Programs that modify files
+
+These programs use the *SDPCHAIN* protocols for FAIR-
 compliant data:
 
 - Create/append to a process-steps.json file
@@ -39,100 +39,20 @@ compliant data:
 ## lctest control files
 
 lctest uses YAML-format control files to indicate what kind of plots to
-output.  The datetime ranges in the `plots` sections must be within those given in the `input` section, as data is only read using the `input` time bounds.
+output.  The datetime ranges in the `plots` sections must be within those given
+in the `input` section, as data is only read using the `input` time bounds.
 
-There are 4 main sections in each file:
+for details on the control file format, type:
+```
+  python
+    > import lcheapo
+    > help(lcheapo.lctest)
+```
 
-  - **``input``**: input data parameters
-      - **``start_time``**: start time to read (0 means from the beginning
-        of each file)
-
-      - **``end_time``**: end time to read (0 means to the end of each file)
-
-      - **``datafiles``**: a list of the LCHEAPO files to read
-
-          - **``name``**: the filename
- 
-          - **``obs_type``**: the obs type (used for spectral instrument 
-            responses,  possible values are given in the help for ``lcplot``
- 
-          - **``station``**: station name to use for this file in the plots
-
-  - **``output``**: output plot file parameters
-  
-      - **``show``**: show the plots?  If False, just save them to files
-      - **``filebase``**: each output file will start with this
-
-  - **``plots``**: the plots to make
-      - **``time_series``**: a list of standard waveform plots
-      
-          - **``description``**: text to put in plot title
- 
-          - **``select``**: parameters to use to select a subset of all the
-            waveforms (see obspy.core.stream.Stream.select())
-
-      - **``start_time``** and **``end_time``**: allow you to plot a 
-        subwindow of the read data.  Set = `null` to plot all
-        read data
- 
-      - **``particle_motion``**: list of particle motion plot types
-
-      - **``spectra``**: list of spectra plots
-      
-          - **``description``**: as in ``time_series``
-          - **``select``**: as in ``time_series``
-          - **``start_time``** and **``end_time``**: as in ``time_series``
-
-      - **``stack``**: plot waveforms from different times on the same
-        channel together.  This useful for single stations where you did
-        the same thing (tap, lift, etc) several times, to be sure that the
-        input and response were consistent.
-
-          - **``description``**: as in ``time_series``
- 
-          - **``orientation_codes``**: list of orientation codes to plot
-            (one plot will be made for each orientation code (the last
-            letter of the channel name))
-
-          - **``times``**: list of times to plot at (each one
-            "yyyy-mm-ddTHH:MM:SS")
-
-          - **``offset_before.s``**: start_time will be this many seconds
-            before each ``time``
-
-          - **``offset_after.s``**: end_time will be this many seconds after
-            each ``time``
-
-      - **``particle_motion``**: list of particle motion plots to make.  Used
-        to confirm the polarity/orientation of the channels.  Each plot will
-        contain time series subplots for each channel and a particle motion
-        plot combining the two.  Generally, the time span of the time-series
-        plot should envelope that of the particle motion plot.  A bit silly
-        that it uses ``times``, like ``stacks`` does, since it doesn't plot
-        all of the times together.  I think I did it because we generally
-        look at particle motions for the same taps that we do stacks on.
-
-          - **``description``**: as in ``time_series``
- 
-          - **``orientation_code_x``**: orientation code to plot on the x axis
-
-          - **``orientation_code_y``**: orientation code to plot on the y axis
-
-          - **``times``**: list of times to plot at (each one
-            "yyyy-mm-ddTHH:MM:SS")
-
-          - **``offset_before.s``**: start_time for particle motion plot will
-            be this many seconds before each ``time``
-
-          - **``offset_after.s``**: end_time will for particle motion plot be
-            this many seconds after each ``time``
-
-          - **``offset_before_ts.s``**: as above, but for the time series plot
-
-          - **``offset_after_ts.s``**: ditto
-
-  - **``plot_globals``**: Default values for each type of plot.  Use the
-    same names and values as for **``plots``**
+to put example lctest control files in the current directory, type:
+```
+    lctest --examples
+```
 
 ### Example plots
 

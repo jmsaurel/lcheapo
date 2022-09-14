@@ -6,10 +6,6 @@ Return basic information about LCHEAPO files
 By default, returns number of channels, samp_rate and start
 and end of each file
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 from .sdpchain import ProcessStep
 from .lcheapo_utils import (LCDataBlock, LCDiskHeader)
 import argparse

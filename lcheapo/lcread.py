@@ -3,10 +3,6 @@
 """
 Read LCHEAPO data into an obspy stream
 """
-# from __future__ import (absolute_import, division, print_function,
-#                         unicode_literals)
-# from future.builtins import *  # NOQA @UnusedWildImport
-
 import warnings
 import struct
 import os
@@ -28,32 +24,29 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
 
     To avoid overlaps, starttime is inclusive and endtime is exclusive
 
-    :param filename: LCHEAPO filename
-    :type  filename: str
-    :param starttime: Start time as a ISO8601 string, a UTCDateTime object,
-        or a number.  The latter is interpreted as seconds since the file start
-    :type  endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param endtime: End time as a ISO8601 string, a UTCDateTime object,
-        or a number.  In the latter case, is seconds after starttime
-    :type  network: str
-    :param network: Set network code (up to two characters)
-    :type  station: str
-    :param station: Set FDSN station name (up to five characters)
-    :type  obs_type: str
-    :param obs_type: OBS type (must match a key in chan_maps)
-    :param verbose: print out info about first and last read data
-    :type verbose: bool
-    :return: stream
-    :rtype:  :class:`~obspy.core.stream.Stream`
+    Args:
+        filename (str): LCHEAPO filename
+        starttime (:class:`~obspy.core.utcdatetime.UTCDateTime`): 
+            Start time as a ISO8601 string, a UTCDateTime object,
+            or a number (seconds after the file start)
+        endtime (:class:`~obspy.core.utcdatetime.UTCDateTime`):
+            End time as a ISO8601 string, a UTCDateTime object,
+            or a number (seconds after starttime)
+        network (str): Set network code (up to two characters)
+        station (str): Set FDSN station name (up to five characters)
+        obs_type (str): OBS type (must match a key in chan_maps)
+        verbose (bool): print out info about first and last read data
 
-    .. rubric:: Example
+    Returns: 
+        stream (:class:`~obspy.core.stream.Stream`): read data
 
-    >>> from lcheapo import read
-    >>> st = read("/path/to/four_channels.lch")
-    >>> print(st)  # doctest: +ELLIPSIS
-    2 Trace(s) in Stream:
-    BW.UH3..EHE | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
-    BW.UH3..EHZ | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
+    Example:
+        >>> from lcheapo import read
+        >>> st = read("/path/to/four_channels.lch")
+        >>> print(st)  # doctest: +ELLIPSIS
+        2 Trace(s) in Stream:
+        BW.UH3..EHE | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
+        BW.UH3..EHZ | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
     """
     # Check/complete input variables
     if len(network) > 2:
@@ -75,12 +68,17 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
 
 def get_data_timelimits(lcheapo_object):
     """
-    Return data start and endtimes
+    Return data start and end times
 
-    :param lcheapo_object: Filename or open file-like object that contains the
-        binary Mini-SEED data.  Any object that provides a read() method will
-        be considered a file-like object.
-    :returns: startime, endtime (UTCDateTime)
+    Args:
+        lcheapo_object (str or file-like object):
+            filename or open file-like object that contains the
+            binary Mini-SEED data.  Any object that provides a read()
+            method will be considered a file-like object.
+    Returns:
+        tuple (tuple): 2-tuple:
+            startime (:class:`obspy.core.UTCDateTime``): start of data
+            endime (:class:`obspy.core.UTCDateTime``): end of data
     """
 
     if hasattr(lcheapo_object, "read"):
@@ -109,6 +107,67 @@ def get_data_timelimits(lcheapo_object):
     return UTCDateTime(starttime), UTCDateTime(endtime)
 
 
+def band_code_sps(band_code, sps):
+    """
+    Verify/correct a channel's band code for a given sampling rate.
+    Band codes are from
+    http://docs.fdsn.org/projects/source-identifiers/en/v1.0/channel-codes.html
+
+    Args:
+        band_code (str): SEED channel code
+        sps (float): sampling rate
+
+    Returns:
+        new_band_code (str): SEED channel band code corresponding to
+            sampling rate
+    """
+    # print(f"{band_code=}, {sps=}")
+    band_codes_SP = 'GDES'
+    band_codes_LP = 'FCHBMLVUWRPTQ'
+    if sps > 5000:
+        return 'J'
+    if band_code in band_codes_SP:
+        if sps >= 1000:
+            return "G"
+        elif sps >= 250:
+            return "D"
+        elif sps >= 80:
+            return "E"
+        elif sps >= 10:
+            return "S"
+        else:
+            raise NameError(
+                "You should not have short period data at < 10 sps")
+    elif band_code in band_codes_LP:
+        if sps >= 1000:
+            return "F"
+        elif sps >= 250:
+            return "C"
+        elif sps >= 80:
+            return "H"
+        elif sps >= 10:
+            return "B"
+        elif sps > 1:
+            return "M"
+        elif sps == 1:
+            return "L"
+        elif sps >= 0.1:
+            return "V"
+        elif sps >= 0.01:
+            return "U"
+        elif sps >= 0.001:
+            return "W"
+        elif sps >= 0.0001:
+            return "R"
+        elif sps >= 0.00001:
+            return "P"
+        elif sps >= 0.000001:
+            return "T"
+        else:
+            return "Q"
+    raise NameError(f'Unknown band code "{band_code}"')
+
+
 def _read_data(starttime, endtime, fp, verbose=False):
     """
     Return data.
@@ -116,13 +175,13 @@ def _read_data(starttime, endtime, fp, verbose=False):
     Returns from the start of the block containing starttime to the end of the
     block containing endtime
 
-    :param starttime: start time
-    :type  starttime: :class:`~obspy.UTCDateTime`
-    :param endtime: end time
-    :type  endtime: :class:`~obspy.UTCDateTime`
-    :param fp: file pointer
-    :type  fp: class `file`
-    :rtype: ~class `obspy.core.Stream`
+    Args:
+        starttime (:class:`~obspy.UTCDateTime`): start time
+        endtime (:class:`~obspy.UTCDateTime`): end time
+        fp (:class:`file`): file pointer
+    
+    Returns
+        stream (:class:`obspy.core.Stream`):
 
     For speed, reads all blocks at once and extracts as slices
     """
@@ -196,7 +255,8 @@ def _get_header_time(header):
     """
     Return time from an LCHEAPO header
 
-    :param header: 14-byte LCHEAPO HEADER
+    Args:
+        header: 14-byte LCHEAPO HEADER
     """
     (msec, second, minute, hour, day, month, year) = struct.unpack(
         '>HBBBBBB', header.data[:8])
@@ -213,7 +273,8 @@ def _get_header_nsamples(header):
     """
     Return number of samples from an LCHEAPO header
 
-    header = 14-byte LCHEAPO HEADER
+    Args:
+        header = 14-byte LCHEAPO HEADER
     """
     (U1, U2) = struct.unpack('>BB', header.data[12:])
     return U2
@@ -224,14 +285,14 @@ def _convert_time_bounds(starttime, endtime, fp):
     Return starttime and endtime as UTCDateTimes
 
     Also makes sure that starttime and endtime are within the data bounds
-    :param startime: UTCDateTime: no change
-                     string: convert to UTCDateTime
-                     numeric: interpret as seconds from file start
-    :param endtime: UTCDateTime: no change
-                    string: convert to UTCDateTime
-                    numeric: interpret as seconds starttime
-    :param fp: file pointer (for checking if the times are within the
-        data bounds)
+    
+    Args:
+        startime (str, float or UTCDate time): starttime.  If float, 
+            seconds from file start
+        endtime (str, float or UTCDate time): end time.  If float, seconds
+            after starttime
+        fp: file pointer (for checking if the times are within the
+            data bounds)
     """
     data_start, data_end = get_data_timelimits(fp)
     if data_start is None:
@@ -269,10 +330,9 @@ def _get_block_number(time, fp):
     """
     Return block number containing first channel containing the given time
 
-    :param time: the time
-    :type  time: :class:`~obspy.UTCDateTime`
-    :param fp: file pointer
-    :type  fp: :class:`~file`
+    Args:
+        time (:class:`~obspy.UTCDateTime`): the time
+        fp (:class:`~file`): file pointer
     """
     lcHeader = LCDiskHeader()
     block = LCDataBlock()
@@ -293,17 +353,14 @@ def _stuff_info(stream, network, station, obs_type):
     """
     Put network, station and channel information into station stream
 
-    :param stream: obspy stream
-    :type  stream: :class:`~obspy.stream.Stream`
-    :param network: network code
-    :type  network: str
-    :param station: station code
-    :type  station: str
-    :param obs_type: type of obs (must be a key in channel_maps)
-    :type  obs_type: str
+    Args:
+        stream (:class:`~obspy.stream.Stream`): obspy stream
+        network (str): network code
+        station (str): station code
+        obs_type (str): type of obs (must be in channel_maps)
 
-    :return data: informed data
-    :rtype  data: :class:`~obspy.stream.Stream`
+    Returns:
+        data (:class:`~obspy.stream.Stream`): informed data
     """
     assert obs_type in chan_maps
     chan_map = chan_maps[obs_type]
@@ -322,78 +379,17 @@ def _stuff_info(stream, network, station, obs_type):
     return stream
 
 
-def band_code_sps(band_code, sps):
-    """
-    Verify/correct a channel's band code for a given sampling rate.
-    Band codes are from
-    http://docs.fdsn.org/projects/source-identifiers/en/v1.0/channel-codes.html
-
-    :param band_code: SEED channel code
-    :type  band_code: str
-    :param sps: sampling rate
-
-    :returns: SEED channel band code corresponding to sampling rate
-    :rtype: str
-    """
-    # print(f"{band_code=}, {sps=}")
-    band_codes_SP = 'GDES'
-    band_codes_LP = 'FCHBMLVUWRPTQ'
-    if sps > 5000:
-        return 'J'
-    if band_code in band_codes_SP:
-        if sps >= 1000:
-            return "G"
-        elif sps >= 250:
-            return "D"
-        elif sps >= 80:
-            return "E"
-        elif sps >= 10:
-            return "S"
-        else:
-            raise NameError(
-                "You should not have short period data at < 10 sps")
-    elif band_code in band_codes_LP:
-        if sps >= 1000:
-            return "F"
-        elif sps >= 250:
-            return "C"
-        elif sps >= 80:
-            return "H"
-        elif sps >= 10:
-            return "B"
-        elif sps > 1:
-            return "M"
-        elif sps == 1:
-            return "L"
-        elif sps >= 0.1:
-            return "V"
-        elif sps >= 0.01:
-            return "U"
-        elif sps >= 0.001:
-            return "W"
-        elif sps >= 0.0001:
-            return "R"
-        elif sps >= 0.00001:
-            return "P"
-        elif sps >= 0.000001:
-            return "T"
-        else:
-            return "Q"
-    raise NameError(f'Unknown band code "{band_code}"')
-
-
 def _load_response(obs_type, channel, start_time):
     """
     Load response corresponding to OBS type and component
 
-    :param obs_type: obs type
-    :type  obs_type: str
-    :param channel: trace channel code
-    :param datetime: time for which to get response
-    :type datetime: :class:`~obspy.UTCDateTime`
+    Args:
+        obs_type (str): obs type (must be in channel_maps)
+        channel (str): trace channel code
+        datetime (:class:`~obspy.UTCDateTime`): time for which to get response
 
-    :return data: instrument response
-    :rtype  data: :class:`~obspy.core.response.Response`
+    Returns:
+        resp (:class:`~obspy.core.response.Response`): instrument response
     """
     assert obs_type in chan_maps
     try:
@@ -561,7 +557,6 @@ def _normalize_time_arg(a):
         return a
     else:
         return temp
-
 
 
 # ---------------------------------------------------------------------------

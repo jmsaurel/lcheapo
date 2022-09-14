@@ -6,10 +6,6 @@ Fix errors and signal time tears in lcheapo files:
   2: Isolated bad time tags
   3: Bad n_blocks in directory entry (says 16384 but is 14336)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-
 import sys
 import argparse
 import queue

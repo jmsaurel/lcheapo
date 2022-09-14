@@ -3,10 +3,6 @@
 """
 Read LCHEAPO data into an obspy stream
 """
-# from __future__ import (absolute_import, division, print_function,
-#                         unicode_literals)
-# from future.builtins import *  # NOQA @UnusedWildImport
-
 import argparse
 import warnings
 # import os
@@ -33,9 +29,11 @@ def lc2SDS():
         - offset information is not written in header
         - data quality field is not modified
         - leapsecond flag is not raised (causes apparent 1-s gap/overlap).
+    Doesn't combine one day's SDS files made from two different LCHEAPO files
+      (last one overwrites first)
     Writes to a directory named SDS/ in the output directory.
     """
-    print(lc2SDS.__doc__)
+    # print(lc2SDS.__doc__)
     parser = argparse.ArgumentParser(
         description=inspect.cleandoc(lc2SDS.__doc__),
         formatter_class=argparse.RawDescriptionHelpFormatter)
