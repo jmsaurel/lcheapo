@@ -146,7 +146,8 @@ def __getOptions():
                                app_version=__version__,
                                parameters=args)
 
-    args.in_dir, args.out_dir, _ = ProcessStep.setup_paths(args)
+    args.input_files = [args.input_file]
+    args.in_dir, args.out_dir, _ = ProcessStep.setup_paths(args, expand_wildcards=False)
     args = parser.parse_args()
 
     # Get the filename (the arguments)

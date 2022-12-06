@@ -30,12 +30,12 @@ def main():
     # Verify output filename
     if not args.output_file:
         # Create output filename
-        base = Path(args.in_fname).stem
-        ext = Path(args.in_fname).suffix
+        base = Path(args.input_files[0]).stem
+        ext = Path(args.input_files[0]).suffix
         args.output_file = f'{base}_{args.start:d}_{args.end:d}{ext}'
     out_path = Path(args.out_dir) / args.output_file
     if out_path.exists():
-        print('output file {out_path} exists already, quitting...')
+        print(f'output file {str(out_path)} exists already, quitting...')
         sys.exit(2)
 
     with open(Path(args.in_dir) / args.input_files[0], 'rb') as fp:
@@ -83,7 +83,7 @@ def main():
     process_step.messages = exec_messages
     process_step.out_file = args.output_file
     process_step.exit_code = return_code
-    process_step.write(args.in_dir, args.out_dir)
+    process_step.write(args.in_dir, args.out_dir, verbose=True)
 
 
 def getOptions():

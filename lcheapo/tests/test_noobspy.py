@@ -3,9 +3,9 @@
 """
 Functions to test the lcheapo functions
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
+# from __future__ import (absolute_import, division, print_function,
+#                         unicode_literals)
+# from future.builtins import *  # NOQA @UnusedWildImport
 
 from os import system
 import unittest
@@ -168,9 +168,9 @@ class TestLCHEAPOMethods(unittest.TestCase):
         Test lccut
         """
         # Run the code
-        cmd = f'lccut -i data BUGGY.fix.lch --start 5000 --end 5099 > temp'
+        cmd = f'lccut -i data BUGGY.fix.lch --start 5000 --end 5099'
         system(cmd)
-        Path('temp').unlink()
+        # Path('temp').unlink()
         Path('process-steps.json').unlink()
 
         # Compare binary files (fix.timetears.txt)

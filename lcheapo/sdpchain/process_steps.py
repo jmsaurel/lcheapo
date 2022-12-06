@@ -57,13 +57,19 @@ class ProcessStep:
             print(text)
         self.messages.append(text)
 
-    def write(self, in_dir, out_dir, filename='process-steps.json', quiet=False):
+    def write(self, in_dir, out_dir, filename='process-steps.json',
+              quiet=False, verbose=False):
         """
         Write the Process Step to a process-steps file
 
-        :param in_dir: directory containing input process-steps file
-        :param out_dir: directory in which to create out process-steps file
+        Args:
+            in_dir: directory containing input process-steps file
+            out_dir: directory in which to create out process-steps file
+            quiet (bool): don't write anything out
+            verbose (bool): print out lots of stuff
         """
+        if verbose==True:
+            quiet=False
         self._modify_parameters()
         step = {'application': dict(name=self.app_name,
                                     description=self.app_description,
@@ -79,12 +85,16 @@ class ProcessStep:
         # READ FILE FROM INPUT DIRECTORY
         in_file = Path(in_dir) / filename
         out_file = Path(out_dir) / filename
+        if verbose is True:
+            print(f'Writing to {str(out_file)}')
         tree = {}
         try:
             fp = open(in_file, "r")
         except FileNotFoundError:  # File not found
             pass
         else:   # File found
+            if verbose is True:
+                write(f'\tFile exists, will append')
             try:
                 tree = json.load(fp)
             except Exception:
@@ -93,7 +103,7 @@ class ProcessStep:
                     out_file = _unique_path(Path(out_dir),
                                                 'process-steps{:02d}.json')
                 if not quiet:
-                    print('{} is unreadable. {} will lack previous steps'
+                    print('{} is unreadable. Writing to new file {}, which will lack previous steps'
                           .format(in_file, out_file))
             fp.close()
         if 'steps' in tree:
