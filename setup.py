@@ -28,8 +28,7 @@ setuptools.setup(
           'jsonschema>=2.6',
           'jsonref>=0.2',
           'progress>=1.5',
-          'lcheapo>=0.73',
-          'crawtools>=0.1'
+          'tiskit-py>=0.3.1'
       ],
     entry_points={
          'console_scripts': [

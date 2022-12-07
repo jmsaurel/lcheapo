@@ -86,7 +86,7 @@ from matplotlib import pyplot as plt
 from obspy.core import UTCDateTime, Stream
 from obspy.signal import PPSD
 # from crawtools.spectral import SpectralDensity  # PSDs
-from tiskit import SpectralDensity  # PSDs
+from tiskit-py import SpectralDensity  # PSDs
 
 from .lcread import read as lcread
 
