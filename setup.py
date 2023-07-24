@@ -28,7 +28,7 @@ setuptools.setup(
           'jsonschema>=2.6',
           'jsonref>=0.2',
           'progress>=1.5',
-          'tiskit-py>=0.3.1'
+          'tiskitpy>=0.4'
       ],
     entry_points={
          'console_scripts': [

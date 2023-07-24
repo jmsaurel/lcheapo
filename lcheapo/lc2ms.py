@@ -54,6 +54,7 @@ def lc2ms():
         sys.exit(0)
 
     # ADJUST INPUT PARAMETERS
+    args.input_files = [args.infile]
     process_step = ProcessStep('lc2ms_weak',
                                " ".join(sys.argv),
                                app_description=__doc__,
@@ -65,7 +66,9 @@ def lc2ms():
     #                 for x in Path(args.in_dir).glob(f)]
 
     stream = lcread(Path(args.in_dir) / args.infile, network=args.network,
-                    station=args.station, obs_type=args.obs_type)
+                    station=args.station, obs_type=args.obs_type,
+                    starttime=0,
+                    endtime = 1*86400*365.25) # For up to 1 year of data
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_files = []

@@ -94,7 +94,7 @@ class ProcessStep:
             pass
         else:   # File found
             if verbose is True:
-                write(f'\tFile exists, will append')
+                print(f'\tFile exists, will append')
             try:
                 tree = json.load(fp)
             except Exception:
