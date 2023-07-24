@@ -7,7 +7,7 @@
                 "version": "0.73.post2"
             },
             "execution": {
-                "command_line": "/Users/crawford/opt/anaconda3/envs/obspy/bin/lcfix -d /Users/crawford/_Work/Programming/lcheapo/lcheapo/tests -i data BUGGY.raw.lch",
+                "command_line": "/Users/crawford/opt/anaconda3/envs/obspy/bin/lcfix -d /Users/crawford/_Work/Programming/lcheapo/tests -i data BUGGY.raw.lch",
                 "date": "2021-06-16T20:44:08",
                 "exit_status": 0,
                 "messages": [
@@ -15,7 +15,7 @@
                 ],
                 "parameters": {
                     "directory_paths": {
-                        "base": "/Users/crawford/_Work/Programming/lcheapo/lcheapo/tests",
+                        "base": "/Users/crawford/_Work/Programming/lcheapo/tests",
                         "input": "data",
                         "output": "."
                     },

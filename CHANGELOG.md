@@ -33,3 +33,4 @@ b0 | Combined lcheapo and lcheapo_obspy
 .     | Fixed bug in lc_test particle_motion part
 .5.post1 | fixed bug in lc2SDS_weak argument handling
 .6 | Removed `import future` (2.x module) because causes crashes with some Pythons
+.7 | Fixed ProcessSteps calling bug in `sdpcat`

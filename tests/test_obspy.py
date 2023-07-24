@@ -30,7 +30,7 @@ class TestAllMethods(unittest.TestCase):
     def setUp(self):
         self.path = Path(__file__).parent.resolve()
         self.testing_path = self.path / "data"
-        self.examples_path = self.path.parent / '_examples'
+        self.examples_path = self.path.parent / 'lcheapo' / '_examples'
 
     def assertTextFilesEqual(self, first, second, msg=None):
         first_f = open(first)
