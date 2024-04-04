@@ -10,8 +10,9 @@ import datetime
 import inspect
 from pathlib import Path
 
-from .sdpchain import ProcessStep
+from sdpchainpy import ProcessStep
 
+# from .sdpchain import ProcessStep
 from .chan_maps import chan_maps
 from .lcread import read as lcread
 from .version import __version__

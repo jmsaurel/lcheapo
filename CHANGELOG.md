@@ -34,3 +34,5 @@ b0 | Combined lcheapo and lcheapo_obspy
 .5.post1 | fixed bug in lc2SDS_weak argument handling
 .6 | Removed `import future` (2.x module) because causes crashes with some Pythons
 .7 | Fixed ProcessSteps calling bug in `sdpcat`
+.8 | Added lccut script creation to `lcfix`, changed creation of process-steps.json
+.  | to put all in one file, make backups of old versions

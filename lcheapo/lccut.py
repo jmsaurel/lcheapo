@@ -13,7 +13,9 @@ import sys
 from math import floor
 from pathlib import Path
 
-from .sdpchain import ProcessStep
+from sdpchainpy import ProcessStep
+
+# from .sdpchain import ProcessStep
 from .version import __version__
 
 BLOCK_SIZE = 512

@@ -4,7 +4,7 @@
             "application": {
                 "description": "Fix common bugs in LCHEAPO data files",
                 "name": "lcfix",
-                "version": "0.73.post2"
+                "version": "1.0.8"
             },
             "execution": {
                 "command_line": "/Users/crawford/opt/anaconda3/envs/obspy/bin/lcfix -d /Users/crawford/_Work/Programming/lcheapo/tests -i data BAD.bad.lch",
@@ -24,6 +24,7 @@
                     "input_files": [
                         "BAD.bad.lch"
                     ],
+                    "lccut_file": false,
                     "output_files": [
                         "BAD.fix.timetears.txt"
                     ],

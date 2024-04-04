@@ -11,10 +11,12 @@ import argparse
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from sdpchainpy import ProcessStep
+
 from .lcheapo_utils import (LCDiskHeader, LCDirEntry)
 from .version import __version__
 
-from .sdpchain.process_steps import ProcessStep
+# from .sdpchain.process_steps import ProcessStep
 
 # ------------------------------------
 # Global Variable Declarations

@@ -130,6 +130,7 @@ class TestMethods(unittest.TestCase):
         ns.base_dir = str(test_path)
         ns.in_dir = 'in_dir'
         ns.out_dir = 'out_dir'
+        ns.input_files = ''
         new_in, new_out = sdpchain.ProcessStep.setup_paths(ns, verbose=False)
         self.assertEqual(new_in, str(test_path / 'in_dir'))
         self.assertEqual(new_out, str(test_path / 'out_dir'))
@@ -174,6 +175,7 @@ class TestMethods(unittest.TestCase):
         """
         # Run the code
         system('sdpstep "cp data/A.txt C.txt"')
+        system('ls')
         Path("process-steps.json").unlink()
         self.assertTextFilesEqual("data/A.txt", "C.txt")
         Path("C.txt").unlink()

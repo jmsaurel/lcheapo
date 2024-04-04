@@ -6,7 +6,9 @@ Return basic information about LCHEAPO files
 By default, returns number of channels, samp_rate and start
 and end of each file
 """
-from .sdpchain import ProcessStep
+from sdpchainpy import ProcessStep
+
+# from .sdpchain import ProcessStep
 from .lcheapo_utils import (LCDataBlock, LCDiskHeader)
 import argparse
 import os

@@ -15,15 +15,16 @@ import logging      # for logging information
 from datetime import timedelta
 from pathlib import Path
 
+from sdpchainpy import ProcessStep
+
 from .lcheapo_utils import (LCDataBlock, LCDiskHeader, LCDirEntry)
-from .sdpchain import ProcessStep
+# from .sdpchain import ProcessStep
 from .version import __version__
 
 # ------------------------------------
 # Global Variable Declarations
 # ------------------------------------
 warnings = 0  # count # of warnings
-
 
 class BugCounters():
     """
@@ -230,9 +231,16 @@ def _get_options():
     parser.add_argument("-o", dest="out_dir", metavar="OUT_DIR", default='.',
                         help="output file directory (absolute, " +
                              "or relative to base_dir)")
+    parser.add_argument("-c", "--lccut", dest="lccut_file", default=False,
+                        action="store_true",
+                        help="generate an lccut script file if there are time"
+                             "tears (USE ONLY IF ALL TIME TEARS ARE VERIFIED"
+                             "TRUE HOLES IN THE DATA, NOT A CLOCK PROBLEM)")
     parser.add_argument("-F", "--forceTimes", dest="forceTime", default=False,
                         action="store_true",
-                        help="Force timetags to be consecutive")
+                        help="Force timetags to be consecutive (USE ONLY IF"
+                             "YOU HAVE TIME TEARS AND YOU ARE SURE THE DATA"
+                             "ARE, IN FACT, CONSECUTIVE)")
     args = parser.parse_args()
     global process_step
     process_step = ProcessStep(
@@ -432,30 +440,22 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     """
     Process one LCHEAPO file
 
-    :param ifp1: input file pointer
-    :type  ifp1: file object
-    :param fname: input file name (without path)
-    :type  fname: string
-    :param outFileRoot: base output file name (with path)
-    :type  outFileRoot: string
-    :param lcHeader: header taken from the first input file
-    :type  lcHeader: :class: `lcheapo:lcHeader`
-    :param firstInpBlock: First block with channel 0 data
-    :type  firstInpBlock: integer
-    :param lastInpBlock: Last block number in the input file
-    :type  lastInpBlock: integer
-    :param hasHeader: Does the input file have a header?
-    :type  hasHeader: boolean
-    :param args: command line arguments
-    :type  args: :class: `argparse.Namespace`
-    :param commandQ: something to do with elegant quitting?
-    :type  commandQ: :class: Queue.Queue
-    :param responseQ: something to do with elegant quitting?
-    :type  responseQ: :class: Queue.Queue
-    :param debug: Print out debugging information?
-    :type  debug: boolean
-    :return: counters, message, fname_timetears
-    :rtype: `tuple`
+    Args:
+        ifp1 (file object): input file pointer
+        fname (str): input file name (without path)
+        outFileRoot (str): base output file name (with path)
+        lcHeader (class: `lcheapo:lcHeader`): header taken from the first
+            input file
+        firstInpBlock (int): First block with channel 0 data
+        lastInpBlock (int): Last block number in the input file
+        hasHeader (bool): Does the input file have a header?
+        args (:class: `argparse.Namespace`): command line arguments
+        commandQ (:class: `Queue.Queue`): something to do with elegant quitting?
+        responseQ (:class: `Queue.Queue`): something to do with elegant quitting?
+        debug (bool): Print out debugging information
+    
+    Returns:
+        (tuple): counters, message, fname_timetears
     """
     # Declare variables
     global startBUG1A, printHeader, lcDir, warnings
@@ -465,10 +465,9 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     printHeader = ''
     startBUG1A = -1
     prev_mux_chan = -1
-    # prev_block_flag = 73
-    # prev_num_samps = 166
-    # prev_U1 = 3
-    # prev_U2 = 166
+    lccut_prev_time = None  # placeholder to avoid writing multiple lccut lines
+                            # for one time tear
+    lccut_prev_block = 0
     verbosity = args.verbosity
     consecIdentTimeErrors, oldDiff = 0, 0
     lcData = LCDataBlock()
@@ -481,6 +480,10 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
         ofp1 = open(outfilename, 'wb')
     fname_timetears = outFileRoot + '.fix.timetears.txt'
     oftt = open(fname_timetears, 'w')
+    of_lccut = None
+    if args.lccut_file is True:
+        of_lccut = open('run_lccut.sh', 'w')
+    
 
     # -----------------------------
     # Copy the disk header to the output file
@@ -632,6 +635,13 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
                                 logging.warning(printHeader + txt)
                                 warnings += 1
                                 print(printHeader + txt, file=oftt)
+                                if of_lccut is not None:
+                                    if lccut_prev_time is None:
+                                        of_lccut.write(f'DIR="cut"\n')
+                                    if not t == lccut_prev_time:
+                                        of_lccut.write(f'lccut --start {lccut_prev_block } --end {currBlock-1} -o $DIR {fname}\n')
+                                        lccut_prev_time = t
+                                        lccut_prev_block = currBlock
                                 counters.time_tear += 1
                     # Go back to original position
                     ifp1.seek(pos)
@@ -830,6 +840,10 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
         ofp1.close()
         ofp_data.close()
     oftt.close()
+    if of_lccut is not None:
+        if not lccut_prev_block == 0:
+            of_lccut.write(f'lccut --start {lccut_prev_block } -o $DIR {fname}\n')
+        of_lccut.close()
 
     # If there is no tear, remove the timetears file
     if counters.time_tear == 0:

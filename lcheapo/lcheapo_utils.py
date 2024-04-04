@@ -388,13 +388,15 @@ class LCDataBlock (LCCommon):
 
     def printHexDumpOfData(self):
         "Print out the data block in hexidecimal format."
+        PER_COLUMN = 2  # Put a space every this many bytes
+        PER_LINE = 32   # Put a newline every this many bytes
         count = 0
         for i in struct.unpack(">498B", self.data):
             sys.stdout.write("{:02x}".format(i))
             count += 1
-            if count % 3 == 0:
+            if count % PER_COLUMN == 0:
                 sys.stdout.write("  ")
-            if count % 30 == 0:
+            if count % PER_LINE == 0:
                 sys.stdout.write("\n")
         sys.stdout.write("\n")
 

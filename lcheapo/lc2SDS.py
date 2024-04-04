@@ -11,8 +11,10 @@ import datetime
 import inspect
 from pathlib import Path
 
+from sdpchainpy import ProcessStep
+
+# from .sdpchain import ProcessStep
 from obspy.core import UTCDateTime
-from .sdpchain import ProcessStep
 from progress.bar import IncrementalBar
 
 from .chan_maps import chan_maps

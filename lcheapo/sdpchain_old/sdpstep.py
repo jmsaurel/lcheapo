@@ -46,6 +46,7 @@ def main():
     Uses subprocess toolbox, so redirects (">") and pipes ("|") won't work
     """
 
+    print('Prehistory')
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=app_description,
@@ -63,23 +64,22 @@ def main():
                         help="path to input files (abs, or rel to base)")
     parser.add_argument("-o", "--output", dest="out_dir", default='.',
                         help="path for output files (abs, or rel to base)")
+    parser.add_argument("--input_files", default='', help="Unused")
     args = parser.parse_args()
     if args.print_version:
         print(f'version {__version__}')
         sys.exit(0)
 
+    print('Early days')
     process_step = ProcessStep(app_name,
                                " ".join(sys.argv),
                                app_description = app_description,
                                app_version = __version__,
                                parameters=args)
 
-    args.in_dir, args.out_dir = ProcessStep.setup_paths(args)
+    args.in_dir, args.out_dir, _ = ProcessStep.setup_paths(args)
 
-    # if args.base_dir:
-    #     print('Changing working directory to {}'.format(args.base_dir))
-    #     os.chdir(args.base_dir)
-
+    print('Here I was')
     if len(args.tool_cmd_line) == 0:
         process_step.exit_code=0,
         process_step.tools=["tool"]
@@ -99,7 +99,8 @@ def main():
         process_step.exit_code=0,
         process_step.messages = exec_message
         process_step.tools=[tool]
-    process_step.write(args.in_dir, args.out_dir)
+    print('Here I am')
+    process_step.write(args.in_dir, args.out_dir, verbose=True)
     return
 
 

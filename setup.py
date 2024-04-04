@@ -24,7 +24,7 @@ setuptools.setup(
     #                                 '_examples/*.py', '_examples/*.yaml']},
     install_requires=[
           'obspy>=1.1',
-          'pyyaml>5.0'
+          'pyyaml>5.0',
           'jsonschema>=2.6',
           'jsonref>=0.2',
           'progress>=1.5',

@@ -15,11 +15,11 @@ from datetime import datetime as dt
 class ProcessStep:
     """
     Create an SDPChain process step
-    
+
     Arguments:
         app_name (str): the application name
         cmdline (str): the full command line
-        
+
     Attributes:
         date(datetime.datetime): datetime at which the command was called
         exit_status (int): command exit status
@@ -68,8 +68,8 @@ class ProcessStep:
             quiet (bool): don't write anything out
             verbose (bool): print out lots of stuff
         """
-        if verbose==True:
-            quiet=False
+        if verbose is True:
+            quiet = False
         self._modify_parameters()
         step = {'application': dict(name=self.app_name,
                                     description=self.app_description,
@@ -80,54 +80,63 @@ class ProcessStep:
                                   parameters=self.parameters,
                                   tools=self.tools,
                                   exit_status=self.exit_status)
-        }
- 
+                }
+
         # READ FILE FROM INPUT DIRECTORY
         in_file = Path(in_dir) / filename
         out_file = Path(out_dir) / filename
+        if out_file.exists() and not out_file.is_file():
+            raise ValueError(f'{out_file=} exists but is not a file!')
         if verbose is True:
-            print(f'Writing to {str(out_file)}')
-        tree = {}
-        try:
-            fp = open(in_file, "r")
-        except FileNotFoundError:  # File not found
-            pass
-        else:   # File found
+            if out_file.is_file():
+                print(f'Appending step to {str(out_file)}')
+            else:
+                print(f'Writing step to {str(out_file)}')
+        in_tree, out_tree = {}, {}
+        if in_file.is_file():
             if verbose is True:
-                print(f'\tFile exists, will append')
-            try:
-                tree = json.load(fp)
-            except Exception:
-                # Couldn't read input file, don't overwrite it either
-                if in_file == out_file:
-                    out_file = _unique_path(Path(out_dir),
-                                                'process-steps{:02d}.json')
-                if not quiet:
-                    print('{} is unreadable. Writing to new file {}, which will lack previous steps'
-                          .format(in_file, out_file))
-            fp.close()
-        if 'steps' in tree:
-            tree['steps'].append(step)
-        else:
-            tree['steps'] = [step]
+                print(f'\t{in_file=} exists')
+            with open(in_file, "r") as fp:
+                try:
+                    in_tree = json.load(fp)
+                except Exception:
+                    print(f"Couldn't read {in_file=}")
         # WRITE FILE TO OUTPUT DIRECTORY
         if out_file.exists():
-            out_file = _unique_path(Path(out_dir),
-                                    'process-steps{:02d}.json')
+            with open(out_file, "r") as fp:
+                out_tree = json.load(fp)
+        if 'steps' in out_tree:
+            tree = out_tree
+            if in_file == out_file:
+                # SAVE INPUT FILE AS A BACKUP
+                bkp_file = copy.deepcopy(out_file)
+                bkp_file.rename(_unique_path(Path(out_dir),
+                                'bkp.process-steps{:02d}.json'))
+                if quiet is not True:
+                    print(f'{in_file=} == {out_file=}, backing up in_file to '
+                          f'{bkp_file}')
+            elif 'steps' in in_tree:
+                if quiet is not True:
+                    print(f'both {in_file=} and {out_file=}, exist, appending '
+                          'current step to out_file')
+        elif 'steps' in in_tree:
+            tree = in_tree
+        else:
+            tree = {'steps': []}
+        tree['steps'].append(step)
         with open(out_file, "w") as fp:
             json.dump(tree, fp, sort_keys=True, indent=4)
 
     def _modify_parameters(self):
         """
         Modify execution parameters to conform to schema
-        
-        puts parameters['in_dir', 'out_dir', base_dir] in 
+
+        puts parameters['in_dir', 'out_dir', base_dir] in
         parameters['directory_paths']{['input'], ['output'], 'base'}
-        
+
         puts output_files in parameters['output_files']
         puts output_file in parameters['output_file']
         """
-        
         ep = self.parameters   # make a shortcut
         # base_dir, in_dir and out_dir all go into directory_paths
         if 'base_dir' in ep or 'in_dir' in ep or 'out_dir' in ep:
@@ -142,7 +151,7 @@ class ProcessStep:
             if 'out_dir' in ep:
                 dp['output'] = ep['out_dir']
                 del ep['out_dir']
-        
+
         # output_files go into parameters['output_files']
         if self.output_files:
             if 'output_files' in ep:
@@ -155,24 +164,26 @@ class ProcessStep:
                 del ep['output_file']
             else:
                 ep['output_file'] = self.output_file
-    
+
     @staticmethod
     def setup_paths(args, expand_wildcards=True, verbose=True):
         """
         Set up paths using SDPCHAIN standards
-    
+
         Args:
             args (:class:NameSpace): usually created by argparser, has
                     attributes base_dir, in_dir, out_dir and input_files
             expand_wildcards (bool): expand captured wildcards in input_files?
         Returns:
             (tuple):
-                in_dir, out_dir, input_files: base_dir-adjusted paths and filenames
-        
+                in_dir (str): base_dir-adjusted args.in_dir
+                out_dir (str): base_dir-adjusted args.out_dir
+                input_files (list): in_dir-adjusted filenames
+
         The rules are:
             - base_dir is the root for in_dir and out_dir)
-            - in_dir is the directory for input files.  An absolute path or relative
-                       to base_dir
+            - in_dir is the directory for input files.  An absolute path or
+                       relative to base_dir
             - out_dir is the directory to output to.
             - in_dir and out_dir are absolute paths or relative to base_dir
         """
@@ -193,7 +204,7 @@ class ProcessStep:
                            for x in Path(in_path).glob(f)]
         else:
             input_files = args.input_files
-            
+
         # Work on out_dir
         if not hasattr(args, "out_dir"):
             return in_path, None, input_files
@@ -205,14 +216,15 @@ class ProcessStep:
             Path(out_path).mkdir(parents=True)
 
         return in_path, out_path, input_files
-    
+
+
 def _choose_path(base_dir, sub_dir):
     """ Set up absolute path to sub-directory """
     if Path(sub_dir).is_absolute():
         return sub_dir
     return str(Path(base_dir) / sub_dir)
-    
-    
+
+
 def _unique_path(directory, name_pattern):
     counter = 0
     while True:

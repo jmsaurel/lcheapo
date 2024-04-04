@@ -398,8 +398,8 @@ def _load_response(obs_type, channel, start_time):
         inv_file = os.path.join(basepath, 'data', f'{obs_type}.station.xml')
         inv = read_inventory(inv_file)
     except Exception:
-        print(f'Could not read inventory file {inv_file}')
-        sys.exit()
+        warnings.warn(f'Could not read inventory file {inv_file}')
+        return []
 
     try:
         resp = inv.select(channel=channel, time=start_time)[0][0][0].response
