@@ -16,6 +16,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from sdpchainpy import ProcessStep
+from progress.bar import IncrementalBar
 
 from .lcheapo_utils import (LCDataBlock, LCDiskHeader, LCDirEntry)
 # from .sdpchain import ProcessStep
@@ -119,6 +120,7 @@ def main():
     numInFiles = len(args.input_files)
     firstFile = True
     for fname in args.input_files:
+    
         ifp1 = open(os.path.join(args.in_dir, fname), 'rb')
 
         # Find and copy the disk header
@@ -525,8 +527,10 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     if debug:
         logging.info("  DEBUGGING")
 
+    bar = IncrementalBar(f'Processing {fname}', index=firstInpBlock, max=lastInpBlock)
     # Loop over blocks, comparing expected and actual times.
     for i in range(firstInpBlock, lastInpBlock+1):
+        bar.next()
         if debug and (i > lastInpBlock-10):
             logging.info("  BLOCK {:d}".format(i))
         lcData.readBlock(ifp1)
@@ -692,6 +696,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
         # prev_U1 = lcData.U1
         # prev_U2 = lcData.U2
     # END LOOP THROUGH EVERY BLOCK
+    bar.finish()
     if responseQ:
         responseQ.put((i, lastInpBlock, counters.bug1, counters.time_tear))
 
