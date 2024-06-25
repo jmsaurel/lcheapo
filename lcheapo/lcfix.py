@@ -636,6 +636,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
                                 txt = fmt.format(currBlock,
                                                  lcData.muxChannel,
                                                  expect_time, t)
+                                print()  # Newline after progress bar
                                 logging.warning(printHeader + txt)
                                 warnings += 1
                                 print(printHeader + txt, file=oftt)
@@ -656,6 +657,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
                         if startBUG1A < 0:
                             txt = "{}{:8d}: LCHEAPO BUG #1a. BUG #1s " +\
                                   "repeating at 500-block intervals"
+                            print()  # Newline after progress bar
                             logging.info(txt.format(printHeader,
                                                     currBlock))
                             startBUG1A = currBlock
@@ -663,6 +665,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
                     else:
                         txt = "{}{:8d}: LCHEAPO BUG #1. CH{:d} " +\
                               "Expected Time: {}, Got: {} "
+                        print()  # Newline after progress bar
                         logging.info(
                             txt.format(printHeader, currBlock,
                                        lcData.muxChannel, expect_time, t))
@@ -674,6 +677,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
                     lastBUG1s.append(currBlock)
         else:
             if args.forceTime and (consecIdentTimeErrors > 0):
+                print()  # Newline after progress bar
                 logging.info(forceTimeErrorStr +
                              "{:d} blocks".format(consecIdentTimeErrors))
                 consecIdentTimeErrors = 0
