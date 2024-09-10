@@ -43,7 +43,7 @@ setuptools.setup(
          ]
     },
     python_requires='>=3.8',
-    classifiers=(
+    classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
         "Intended Audience :: Science/Research",
@@ -54,6 +54,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Physics"
-    ),
+    ],
     keywords='oceanography, marine, OBS'
 )

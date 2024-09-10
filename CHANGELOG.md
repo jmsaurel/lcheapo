@@ -44,3 +44,4 @@ b0 | Combined lcheapo and lcheapo_obspy
 - Added function `lcread:read_station()` and use in `lcread`
 - Allow lc2SDS_weak to create/append to a StationXML file
 - `lc2SDS_py` now sets quality flag to Q or D
+- Various debugging
