@@ -27,6 +27,7 @@ from .version import __version__
 # ------------------------------------
 warnings = 0  # count # of warnings
 
+
 class BugCounters():
     """
     lcfix bug counters:
@@ -120,7 +121,7 @@ def main():
     numInFiles = len(args.input_files)
     firstFile = True
     for fname in args.input_files:
-    
+
         ifp1 = open(os.path.join(args.in_dir, fname), 'rb')
 
         # Find and copy the disk header
@@ -452,10 +453,10 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
         lastInpBlock (int): Last block number in the input file
         hasHeader (bool): Does the input file have a header?
         args (:class: `argparse.Namespace`): command line arguments
-        commandQ (:class: `Queue.Queue`): something to do with elegant quitting?
-        responseQ (:class: `Queue.Queue`): something to do with elegant quitting?
+        commandQ (:class: `Queue.Queue`): something for elegant quitting?
+        responseQ (:class: `Queue.Queue`): something for elegant quitting?
         debug (bool): Print out debugging information
-    
+
     Returns:
         (tuple): counters, message, fname_timetears
     """
@@ -467,8 +468,8 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     printHeader = ''
     startBUG1A = -1
     prev_mux_chan = -1
-    lccut_prev_time = None  # placeholder to avoid writing multiple lccut lines
-                            # for one time tear
+    # placeholder to avoid writing multiple lccut lines for one time tear
+    lccut_prev_time = None
     lccut_prev_block = 0
     verbosity = args.verbosity
     consecIdentTimeErrors, oldDiff = 0, 0
@@ -485,7 +486,6 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     of_lccut = None
     if args.lccut_file is True:
         of_lccut = open('run_lccut.sh', 'w')
-    
 
     # -----------------------------
     # Copy the disk header to the output file
@@ -527,7 +527,8 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     if debug:
         logging.info("  DEBUGGING")
 
-    bar = IncrementalBar(f'Processing {fname}', index=firstInpBlock, max=lastInpBlock)
+    bar = IncrementalBar(f'Processing {fname}', index=firstInpBlock,
+                         max=lastInpBlock)
     # Loop over blocks, comparing expected and actual times.
     for i in range(firstInpBlock, lastInpBlock+1):
         bar.next()
@@ -642,7 +643,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
                                 print(printHeader + txt, file=oftt)
                                 if of_lccut is not None:
                                     if lccut_prev_time is None:
-                                        of_lccut.write(f'DIR="cut"\n')
+                                        of_lccut.write('DIR="cut"\n')
                                     if not t == lccut_prev_time:
                                         of_lccut.write(f'lccut --start {lccut_prev_block } --end {currBlock-1} -o $DIR {fname}\n')
                                         lccut_prev_time = t
@@ -851,7 +852,8 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     oftt.close()
     if of_lccut is not None:
         if not lccut_prev_block == 0:
-            of_lccut.write(f'lccut --start {lccut_prev_block } -o $DIR {fname}\n')
+            of_lccut.write('lccut --start {} -o $DIR {}\n'.format(
+                lccut_prev_block, fname))
         of_lccut.close()
 
     # If there is no tear, remove the timetears file

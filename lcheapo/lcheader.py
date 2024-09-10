@@ -4,7 +4,7 @@
 Create/modify an LCHEAPO data file header
 """
 import sys
-import copy
+# import copy
 # import os
 import math as m
 import argparse
@@ -33,7 +33,7 @@ accepted_num_channels = [1, 2, 3, 4]
 def main():
     """main function"""
     opts = __getOptions()
-    
+
     params = dict(wake_time=datetime(2017, 1, 1, 5, 0, 0),
                   end_time=datetime(2018, 1, 1, 5, 0, 0),
                   output_filename='generic.header.lch')
@@ -90,13 +90,13 @@ def main():
         h.dirBlock = h.dirStart + int(dirCount/dirEntries_per_dirBlock)
         h.seekHeaderPosition(fp)
         h.writeHeader(fp)
-        
+
     global process_step
     process_step.parameters['wake_time'] = params['wake_time'].isoformat()
     process_step.parameters['end_time'] = params['end_time'].isoformat()
     process_step.output_file = params['output_filename']
     process_step.exit_status = 0
-    process_step.write(opts.in_dir, opts.out_dir) 
+    process_step.write(opts.in_dir, opts.out_dir)
     sys.exit(0)
 
 
@@ -127,7 +127,8 @@ def __getOptions():
                         help=f"Sample Rate. Allowed = {accepted_sample_rates}")
     parser.add_argument("-c", "--num_channels", type=int, metavar="NCHANS",
                         choices=accepted_num_channels,
-                        help=f"Number of channels. Allowed = {accepted_num_channels}")
+                        help="Number of channels. Allowed = {}".format(
+                            accepted_num_channels))
     parser.add_argument("-w", "--wake_time",  metavar="TIME",
                         help="Start of recorded data (ISO0601 format)")
     parser.add_argument("-e", "--end_time",  metavar="TIME",
@@ -149,7 +150,8 @@ def __getOptions():
                                parameters=args)
 
     args.input_files = [args.input_file]
-    args.in_dir, args.out_dir, _ = ProcessStep.setup_paths(args, expand_wildcards=False)
+    args.in_dir, args.out_dir, _ = ProcessStep.setup_paths(
+        args, expand_wildcards=False)
     args = parser.parse_args()
 
     # Get the filename (the arguments)

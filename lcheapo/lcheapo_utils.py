@@ -163,6 +163,9 @@ class LCDiskHeader (LCCommon):
 
         (self.sampleRate, self.startChannel, self.numberOfChannels) =\
             struct.unpack('>3H', fp.read(6))
+        if self.numberOfChannels not in (1,2,4,8):
+            print(f'{self.numberOfChannels=} not in (1,2,4,8), header absent or corrupt')
+            return 0
         (self.slowDataRate, self.slowStartChannel,
          self.slowNumberOfChannels) = struct.unpack('>3H', fp.read(6))
         (self.dataType, self.diskSize, self.ramSize, self.numberOfWindows) =\
@@ -413,7 +416,7 @@ class LCDataBlock (LCCommon):
 
     def __str__(self):
         ch_str = "CH:{:d}".format(self.muxChannel)
-        samp_str = "Samples:%3d".format(self.numberOfSamples)
+        samp_str = "Samples:{:3d}".format(self.numberOfSamples)
         date_fmt = "Date:{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{02d}.{:04d}"
         date_str = date_fmt.format(self.year, self.month, self.day, self.hour,
                                    self.minute, self.second, self.msec)

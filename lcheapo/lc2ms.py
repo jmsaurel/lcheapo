@@ -6,14 +6,14 @@ create miniSEED file(s) from LCHEAPO file(s)
 import argparse
 # import os
 import sys
-import datetime
+# import datetime
 import inspect
 from pathlib import Path
 
 from sdpchainpy import ProcessStep
 
 # from .sdpchain import ProcessStep
-from .chan_maps import chan_maps
+from .instrument_metadata import chan_maps
 from .lcread import read as lcread
 from .version import __version__
 
@@ -56,7 +56,7 @@ def lc2ms():
 
     # ADJUST INPUT PARAMETERS
     args.input_files = [args.infile]
-    process_step = ProcessStep('lc2ms_weak',
+    process_step = ProcessStep('lc2ms_py',
                                " ".join(sys.argv),
                                app_description=__doc__,
                                app_version=__version__,
@@ -69,13 +69,14 @@ def lc2ms():
     stream = lcread(Path(args.in_dir) / args.infile, network=args.network,
                     station=args.station, obs_type=args.obs_type,
                     starttime=0,
-                    endtime = 1*86400*365.25) # For up to 1 year of data
+                    endtime=1*86400*365.25)  # For up to 1 year of data
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_files = []
     for tr in stream:
         s = tr.stats
-        out_files.append(f'{s.network}.{s.station}.{s.location}.{s.channel}.mseed')
+        out_files.append('{}.{}.{}.{}.mseed'.format(s.network, s.station,
+                                                    s.location, s.channel))
         fname = str(out_dir / out_files[-1])
         tr.write(fname, format='MSEED', encoding='STEIM1', reclen=4096)
     return_code = 0

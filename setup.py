@@ -18,10 +18,6 @@ setuptools.setup(
     url="https://github.com/WayneCrawford/lcheapo",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    # packages=['lcheapo'],
-    # package_dir={'lcheapo': 'lcheapo'},
-    # package_data={'lcheapo': ['data/*.xml', 'data/*.json',
-    #                                 '_examples/*.py', '_examples/*.yaml']},
     install_requires=[
           'obspy>=1.1',
           'pyyaml>5.0',
@@ -40,8 +36,8 @@ setuptools.setup(
              'lcinfo=lcheapo.lcinfo:main',
              'lcheader=lcheapo.lcheader:main',
              'lcplot=lcheapo.lcplot:main',
-             'lc2SDS_weak=lcheapo.lc2SDS:lc2SDS',
-             'lc2ms_weak=lcheapo.lc2ms:lc2ms',
+             'lc2SDS_py=lcheapo.lc2SDS:lc2SDS',
+             'lc2ms_py=lcheapo.lc2ms:lc2ms',
              'lctest=lcheapo.lctest:main',
              'lc_examples=lcheapo.lcputexamples:main'
          ]
