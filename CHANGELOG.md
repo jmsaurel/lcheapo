@@ -45,3 +45,7 @@ b0 | Combined lcheapo and lcheapo_obspy
 - Allow lc2SDS_weak to create/append to a StationXML file
 - `lc2SDS_py` now sets quality flag to Q or D
 - Various debugging
+
+patch version | description
+------------- | --------------
+.0.post1      | include examples on pypi, require module sdpchainpy

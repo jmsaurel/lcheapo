@@ -24,12 +24,11 @@ setuptools.setup(
           'jsonschema>=2.6',
           'jsonref>=0.2',
           'progress>=1.5',
+          'sdpchainpy>=1.0b2',
           'tiskitpy>=0.4'
       ],
     entry_points={
          'console_scripts': [
-             'sdpcat=lcheapo.sdpchain:sdpcat',
-             'sdpstep=lcheapo.sdpchain:sdpstep',
              'lcfix=lcheapo.lcfix:main',
              'lcdump=lcheapo.lcdump:main',
              'lccut=lcheapo.lccut:main',
