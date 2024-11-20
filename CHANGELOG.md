@@ -49,3 +49,4 @@ b0 | Combined lcheapo and lcheapo_obspy
 patch version | description
 ------------- | --------------
 .0.post1      | include examples on pypi, require module sdpchainpy
+.0.post2      | handle read length different from expected, removed ``endDate`` from instrument responses (except SPOBS1, and BBOBS1 pre-2012)

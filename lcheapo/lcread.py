@@ -206,6 +206,15 @@ def _read_data(starttime, endtime, fp, verbose=False):
 
     # Read the data and arrange in read_blocks*512 array
     buf = fp.read(read_blocks * 512)
+    if not (lb:=len(buf)) == read_blocks * 512:
+        if lb%512 == 0:
+            print(f'tried to read {read_blocks} blocks, only found {int(lb/512)}, adjusting...')
+        else:
+            print(f'tried to read {read_blocks} blocks, only found {lb/512}, adjusting...')
+            buf = buf[:lb-remainder]
+            lb = len(buf)
+            assert lb%512 == 0
+        read_blocks = int(lb/512)
     dt = np.dtype('b')
     all = np.frombuffer(buf, dtype=dt)
     a = np.reshape(all, (read_blocks, 512))  # keep data contiguous
@@ -387,7 +396,7 @@ def _load_response(obs_type, sample_rate, channel, start_time):
     Args:
         obs_type (str): obs type (must be in channel_maps)
         channel (str): trace channel code
-        datetime (:class:`~obspy.UTCDateTime`): time for which to get response
+        start_time (:class:`~obspy.UTCDateTime`): time for which to get response
 
     Returns:
         resp (:class:`~obspy.core.response.Response`): instrument response
