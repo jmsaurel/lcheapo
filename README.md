@@ -31,7 +31,5 @@ compliant data:
 | lccut       | extract section of an LCHEAPO file                                            |
 | lcfix       | fix common bugs in an LCHEAPO file                                            |
 | lcheader    | create an LCHEAPO header + directory                                          |
-| sdpcat      | concatenate data files                                                        |
-| sdpstep     | run a command line tool and save info to process-steps file                   |
-| lc2ms_weak  | converts LCHEAPO file to basic miniSEED files                                 |
-| lc2SDS_weak | converts LCHEAPO file to SeisComp Data Structure, with basic drift correction |
+| lc2ms_py    | converts LCHEAPO file to basic miniSEED files                                 |
+| lc2SDS_py   | converts LCHEAPO file to SeisComp Data Structure, with basic drift correction |
