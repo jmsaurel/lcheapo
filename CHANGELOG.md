@@ -50,3 +50,9 @@ patch version | description
 ------------- | --------------
 .0.post1      | include examples on pypi, require module sdpchainpy
 .0.post2      | handle read length different from expected, removed ``endDate`` from instrument responses (except SPOBS1, and BBOBS1 pre-2012)
+
+### v2.1
+
+- lcread() should work with numpy2.0 (partially verified)
+- lc2SDS\_py and lc2ms\_py:
+    - argparse limits station names to 5 characters, network names to 2

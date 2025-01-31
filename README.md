@@ -1,6 +1,6 @@
 # lcheapo
 
-Viewing and modifying LCHEAPO OBS data
+Viewing and modifying LCHEAPO-2000 OBS data
 
 ## Overview
 
@@ -15,16 +15,12 @@ Type ``{command} -h`` to get a list of parameters and options
 | lcdump      | dump raw information from LCHEAPO files               |
 | lcinfo      | return basic information about an LCHEAPO file        |
 | lcplot      | plot an LCHEAPO file                                  |
-| lctest      | plot LCHEAPO tests  (**use obstest instead**)         |
 | lc_examples | create a directory with examples of lcplot and lctest |
 
 #### Programs that modify files
 
-These programs use the *SDPCHAIN* protocols for FAIR-
-compliant data:
-
-- Create/append to a process-steps.json file
-- Read from input directory (-i) and output to (-o)
+These programs integrate the (sdpchainpy)[https://github.com/WayneCrawford/sdpchainpy]
+module, to document the processing workflow.
 
 | Program     | description                                                                   |
 | ----------- | ----------------------------------------------------------------------------- |

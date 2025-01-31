@@ -215,7 +215,7 @@ def _read_data(starttime, endtime, fp, verbose=False):
             lb = len(buf)
             assert lb%512 == 0
         read_blocks = int(lb/512)
-    dt = np.dtype('b')
+    dt = np.dtype('b')  # signed byte (why?)
     all = np.frombuffer(buf, dtype=dt)
     a = np.reshape(all, (read_blocks, 512))  # keep data contiguous
     # The following takes the same amount of time ...
@@ -250,11 +250,9 @@ def _read_data(starttime, endtime, fp, verbose=False):
         # Get data
         chan_data = data[i:read_blocks:n_chans, :].flatten()
         # could be quicker using the np.flat() iterator ?
-        t32 = np.array(chan_data[0: 498*chan_blocks: 3]*(1 << 16)
-                       + chan_data[1: 498*chan_blocks: 3].astype('B')
-                       * (1 << 8)
-                       + chan_data[2: 498*chan_blocks: 3].astype('B'),
-                       dtype='int32')
+        t32 = (np.int32(chan_data[0: 498*chan_blocks: 3])*(1 << 16) +
+               np.int32(chan_data[1: 498*chan_blocks: 3].astype('B'))*(1 << 8) +
+               np.int32(chan_data[2: 498*chan_blocks: 3].astype('B')))
         stream.append(Trace(data=t32, header=stats))
     eps = 1e-6
     stream.trim(starttime=starttime, endtime=endtime-eps, nearest_sample=False)

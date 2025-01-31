@@ -8,7 +8,7 @@
   <Network code="XX" startDate="2001-01-01T00:00:00.000000Z">
     <Description>Test data - Reserved for test data (and unvalidated subnetworks)</Description>
     <SelectedNumberStations>4</SelectedNumberStations>
-    <Station code="SP_62" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z">
+    <Station code="SP_62" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z">
       <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
       <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
       <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -24,11 +24,11 @@
         <Vendor>Scripps Inst. Oceanography</Vendor>
         <Model>SPOBS1</Model>
       </Equipment>
-      <CreationDate>2006-01-01T00:00:00.000000Z</CreationDate>
+      <CreationDate>2004-01-01T00:00:00.000000Z</CreationDate>
       <TerminationDate>2024-07-15T00:00:00.000000Z</TerminationDate>
       <TotalNumberChannels>2</TotalNumberChannels>
       <SelectedNumberChannels>2</SelectedNumberChannels>
-      <Channel code="SH3" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
+      <Channel code="SH3" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -602,7 +602,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="BDH" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
+      <Channel code="BDH" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -1173,7 +1173,7 @@
         </Response>
       </Channel>
     </Station>
-    <Station code="SP125" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z">
+    <Station code="SP125" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z">
       <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
       <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
       <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -1189,11 +1189,11 @@
         <Vendor>Scripps Inst. Oceanography</Vendor>
         <Model>SPOBS1</Model>
       </Equipment>
-      <CreationDate>2006-01-01T00:00:00.000000Z</CreationDate>
+      <CreationDate>2004-01-01T00:00:00.000000Z</CreationDate>
       <TerminationDate>2024-07-15T00:00:00.000000Z</TerminationDate>
       <TotalNumberChannels>2</TotalNumberChannels>
       <SelectedNumberChannels>2</SelectedNumberChannels>
-      <Channel code="EH3" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
+      <Channel code="EH3" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -1729,7 +1729,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="HDH" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
+      <Channel code="HDH" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -2262,7 +2262,7 @@
         </Response>
       </Channel>
     </Station>
-    <Station code="SP250" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z">
+    <Station code="SP250" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z">
       <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
       <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
       <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -2278,11 +2278,11 @@
         <Vendor>Scripps Inst. Oceanography</Vendor>
         <Model>SPOBS1</Model>
       </Equipment>
-      <CreationDate>2006-01-01T00:00:00.000000Z</CreationDate>
+      <CreationDate>2004-01-01T00:00:00.000000Z</CreationDate>
       <TerminationDate>2024-07-15T00:00:00.000000Z</TerminationDate>
       <TotalNumberChannels>2</TotalNumberChannels>
       <SelectedNumberChannels>2</SelectedNumberChannels>
-      <Channel code="DH3" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
+      <Channel code="DH3" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -2780,7 +2780,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="CDH" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
+      <Channel code="CDH" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -3275,7 +3275,7 @@
         </Response>
       </Channel>
     </Station>
-    <Station code="SP500" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z">
+    <Station code="SP500" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z">
       <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
       <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
       <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -3291,11 +3291,11 @@
         <Vendor>Scripps Inst. Oceanography</Vendor>
         <Model>SPOBS1</Model>
       </Equipment>
-      <CreationDate>2006-01-01T00:00:00.000000Z</CreationDate>
+      <CreationDate>2004-01-01T00:00:00.000000Z</CreationDate>
       <TerminationDate>2024-07-15T00:00:00.000000Z</TerminationDate>
       <TotalNumberChannels>2</TotalNumberChannels>
       <SelectedNumberChannels>2</SelectedNumberChannels>
-      <Channel code="DH3" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
+      <Channel code="DH3" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -3755,7 +3755,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="CDH" startDate="2006-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
+      <Channel code="CDH" startDate="2004-01-01T00:00:00.000000Z" endDate="2010-01-01T00:00:00Z" locationCode="00">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>

@@ -24,6 +24,7 @@ setuptools.setup(
           'jsonschema>=2.6',
           'jsonref>=0.2',
           'progress>=1.5',
+          'numpy<2.0',
           'sdpchainpy>=1.0b2',
           'tiskitpy>=0.4'
       ],
@@ -35,9 +36,8 @@ setuptools.setup(
              'lcinfo=lcheapo.lcinfo:main',
              'lcheader=lcheapo.lcheader:main',
              'lcplot=lcheapo.lcplot:main',
-             'lc2SDS_py=lcheapo.lc2SDS:lc2SDS',
-             'lc2ms_py=lcheapo.lc2ms:lc2ms',
-             'lctest=lcheapo.lctest:main',
+             'lc2SDS_py=lcheapo.lc2SDS:main',
+             'lc2ms_py=lcheapo.lc2ms:main',
              'lc_examples=lcheapo.lcputexamples:main'
          ]
     },

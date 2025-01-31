@@ -23,7 +23,7 @@ from .lcread import read as lcread, get_data_timelimits
 from .version import __version__
 
 
-def lc2SDS():
+def main():
     """
     Convert fixed LCHEAPO data to SeisComp Data Structure
 
@@ -65,7 +65,7 @@ def lc2SDS():
     else:
         inst_start_offset = 0
         inst_drift = 0
-        warnings.warn('Could not calculate clock drift, assuming zero!')
+        warnings.warn('Could not calculate clock drift, setting quality flag to "D')
         quality_flag = 'D'
 
     first_time = True
@@ -138,6 +138,20 @@ def _write_stationxml(sampling_rate, start_date, end_date, args):
                                           end_date=end_date)])
     inv.write(str(inv_file), format='STATIONXML')
 
+def _verify_station_code(s):
+    if not s.isalnum():
+        raise argparse.ArgumentTypeError(f'Station code "{s}" has non-alphanumeric values')
+    if len(s) > 5:
+        raise argparse.ArgumentTypeError(f'Station code "{s}" is > 5 characters long')
+    return s
+
+def _verify_network_code(s):
+    if not s.isalnum():
+        raise argparse.ArgumentTypeError(f'Network code "{s}" has non-alphanumeric values')
+    if len(s) > 2:
+        raise argparse.ArgumentTypeError(f'Network code "{s}" is > 2 characters long')
+    return s
+
 
 def _get_args():
     parser = argparse.ArgumentParser(
@@ -152,9 +166,11 @@ def _get_args():
                         help="obs type.  Controls channel and location codes",
                         choices=[s for s in chan_maps])
     parser.add_argument("--station", default='SSSSS',
-                        help="station code for this instrument (max 5 characters, default=SSSSS)")
+                        type=_verify_station_code,
+                        help="station code for this instrument (default=SSSSS)")
     parser.add_argument("--network", default='XX',
-                        help="network code for this instrument (2 characters, default=XX)")
+                        type=_verify_network_code,
+                        help="network code for this instrument (default=XX)")
     parser.add_argument("-s", "--sync_start_times", nargs='+',
                         metavar=("REF_START", "INST_START"),
                         help="Start datetimes for the reference (usually GPS) "

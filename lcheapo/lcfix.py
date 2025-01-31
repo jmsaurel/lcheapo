@@ -158,7 +158,7 @@ def main():
                                         ifp1, firstInpBlock)
 
         # Process file
-        (loopcounters, msg, ofname) = _process_input_file(
+        (loopcounters, new_msgs, ofname) = _process_input_file(
             ifp1, fname, outFileRoot, lcHeader, firstInpBlock,
             lastInpBlock, firstFile, args, commandQ, responseQ)
         ifp1.close()
@@ -166,7 +166,7 @@ def main():
         # Update counters
         counters += loopcounters
         n_files += 1
-        msgs.append(msg)
+        msgs.extend(new_msgs)
         outFiles.append(ofname)
 
         firstFile = False
@@ -818,7 +818,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
             lcDir.writeDirEntry(ofp1)
         iDir += 1
 
-    message = _print_blockloop_message(fname, outfilename, args.forceTime, i,
+    messages = _print_blockloop_message(fname, outfilename, args.forceTime, i,
                                        counters)
     if iDir != lcHeader.dirCount:
         if hasHeader:
@@ -862,8 +862,8 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     # Otherwise, if not forced time corrections, remove the output data file
     elif not args.forceTime:
         os.remove(outfilename)
-        return counters, message, fname_timetears
-    return counters, message, outfilename
+        return counters, messages, fname_timetears
+    return counters, messages, outfilename
 
 
 def _log_error_2(type, printHeader, currBlock, chan, expect_time, t):
@@ -875,15 +875,17 @@ def _log_error_2(type, printHeader, currBlock, chan, expect_time, t):
 
 def _print_blockloop_message(fname, outfilename, forceTime, i,
                              counters):
+    msgs=[]
     # Print out end-of-loop message for one file
-    msg = "  {}=>{}: Finished at block {:d} ".format(
-        fname, os.path.split(outfilename)[1], i)
+    msgs.append("  {}=>{}: Finished at block {:d}".format(
+        fname, os.path.split(outfilename)[1], i))
     if forceTime:
-        msg += f"({counters.time_tear:d} time errors FORCEABLY corrected)"
+        msgs.append(f"  ({counters.time_tear:d} time errors FORCEABLY corrected)")
     else:
-        msg += "(" + str(counters) + ")"
-    logging.info(msg)
-    return msg
+        msgs.append(f"  {str(counters)}")
+    for x in msgs:
+        logging.info(x)
+    return msgs
 
 
 def _get_next_time(ifp1, channel, pos):

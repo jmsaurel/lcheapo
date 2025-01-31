@@ -4,11 +4,11 @@
   <Sender>Wayne Crawford, Email: crawford@ipgp.fr</Sender>
   <Module>obsinfo-makeStationXML 1.0.dev1</Module>
   <ModuleURI>https://gitlab.com/resif/smm/obsinfo</ModuleURI>
-  <Created>2024-07-15T16:42:17.133595Z</Created>
-  <Network code="XX" startDate="2001-01-01T00:00:00.000000Z">
-    <Description>Test data - Reserved for test data (and unvalidated subnetworks)</Description>
+  <Created>2025-01-27T09:50:06.796691Z</Created>
+  <Network code="XX" startDate="2015-01-01T00:00:00.000000Z">
+    <Description>All LCHEAPO HYDROCTOPUS configurations</Description>
     <SelectedNumberStations>4</SelectedNumberStations>
-    <Station code="HO_62" startDate="2006-01-01T00:00:00.000000Z">
+    <Station code="HO_62" startDate="2016-01-01T00:00:00.000000Z">
       <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
       <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
       <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -23,11 +23,10 @@
         <Manufacturer>INSU-IPGP</Manufacturer>
         <Model>HYDROCT1</Model>
       </Equipment>
-      <CreationDate>2006-01-01T00:00:00.000000Z</CreationDate>
-      <TerminationDate>2024-07-15T00:00:00.000000Z</TerminationDate>
+      <CreationDate>2016-01-01T00:00:00.000000Z</CreationDate>
       <TotalNumberChannels>4</TotalNumberChannels>
       <SelectedNumberChannels>4</SelectedNumberChannels>
-      <Channel code="BDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="01">
+      <Channel code="BDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="01">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -592,7 +591,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="BDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="02">
+      <Channel code="BDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="02">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -1157,7 +1156,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="BDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="03">
+      <Channel code="BDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="03">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -1722,7 +1721,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="BDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="04">
+      <Channel code="BDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="04">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -2288,7 +2287,7 @@
         </Response>
       </Channel>
     </Station>
-    <Station code="HO125" startDate="2006-01-01T00:00:00.000000Z">
+    <Station code="HO125" startDate="2016-01-01T00:00:00.000000Z">
       <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
       <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
       <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -2303,11 +2302,10 @@
         <Manufacturer>INSU-IPGP</Manufacturer>
         <Model>HYDROCT1</Model>
       </Equipment>
-      <CreationDate>2006-01-01T00:00:00.000000Z</CreationDate>
-      <TerminationDate>2024-07-15T00:00:00.000000Z</TerminationDate>
+      <CreationDate>2016-01-01T00:00:00.000000Z</CreationDate>
       <TotalNumberChannels>4</TotalNumberChannels>
       <SelectedNumberChannels>4</SelectedNumberChannels>
-      <Channel code="HDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="01">
+      <Channel code="HDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="01">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -2834,7 +2832,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="HDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="02">
+      <Channel code="HDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="02">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -3361,7 +3359,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="HDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="03">
+      <Channel code="HDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="03">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -3888,7 +3886,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="HDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="04">
+      <Channel code="HDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="04">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -4416,7 +4414,7 @@
         </Response>
       </Channel>
     </Station>
-    <Station code="HO250" startDate="2006-01-01T00:00:00.000000Z">
+    <Station code="HO250" startDate="2016-01-01T00:00:00.000000Z">
       <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
       <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
       <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -4431,11 +4429,10 @@
         <Manufacturer>INSU-IPGP</Manufacturer>
         <Model>HYDROCT1</Model>
       </Equipment>
-      <CreationDate>2006-01-01T00:00:00.000000Z</CreationDate>
-      <TerminationDate>2024-07-15T00:00:00.000000Z</TerminationDate>
+      <CreationDate>2016-01-01T00:00:00.000000Z</CreationDate>
       <TotalNumberChannels>4</TotalNumberChannels>
       <SelectedNumberChannels>4</SelectedNumberChannels>
-      <Channel code="CDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="01">
+      <Channel code="CDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="01">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -4924,7 +4921,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="CDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="02">
+      <Channel code="CDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="02">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -5413,7 +5410,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="CDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="03">
+      <Channel code="CDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="03">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -5902,7 +5899,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="CDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="04">
+      <Channel code="CDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="04">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -6392,7 +6389,7 @@
         </Response>
       </Channel>
     </Station>
-    <Station code="HO500" startDate="2006-01-01T00:00:00.000000Z">
+    <Station code="HO500" startDate="2016-01-01T00:00:00.000000Z">
       <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
       <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
       <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -6407,11 +6404,10 @@
         <Manufacturer>INSU-IPGP</Manufacturer>
         <Model>HYDROCT1</Model>
       </Equipment>
-      <CreationDate>2006-01-01T00:00:00.000000Z</CreationDate>
-      <TerminationDate>2024-07-15T00:00:00.000000Z</TerminationDate>
+      <CreationDate>2016-01-01T00:00:00.000000Z</CreationDate>
       <TotalNumberChannels>4</TotalNumberChannels>
       <SelectedNumberChannels>4</SelectedNumberChannels>
-      <Channel code="CDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="01">
+      <Channel code="CDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="01">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -6862,7 +6858,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="CDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="02">
+      <Channel code="CDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="02">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -7313,7 +7309,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="CDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="03">
+      <Channel code="CDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="03">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
@@ -7764,7 +7760,7 @@
           </Stage>
         </Response>
       </Channel>
-      <Channel code="CDH" startDate="2006-01-01T00:00:00.000000Z" locationCode="04">
+      <Channel code="CDH" startDate="2016-01-01T00:00:00.000000Z" locationCode="04">
         <Latitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Latitude>
         <Longitude unit="DEGREES" minusError="0.0" plusError="0.0">0.0</Longitude>
         <Elevation unit="METERS" minusError="0" plusError="0">0.0</Elevation>
