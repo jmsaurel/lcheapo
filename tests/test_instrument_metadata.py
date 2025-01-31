@@ -38,15 +38,18 @@ class TestAllMethods(unittest.TestCase):
         """
         starttime, endtime = UTCDateTime(2024, 1, 1), UTCDateTime(2024, 1, 1)
         for sample_rate in [62.5, 125., 250., 500.]:
-            # for obs_type in ['BBOBS1', 'SPOBS1', 'SPOBS2', 'HYDROCT']:
-            for obs_type in ['BBOBS1', 'SPOBS1', 'SPOBS2', 'HYDROCT1']:
+            for obs_type in ['BBOBS1', 'SPOBS2', 'HYDROCT1']:
                 sta = load_station(obs_type, sample_rate, starttime=starttime,
                                    endtime=endtime)
                 assert isinstance(sta, Station)
-                if obs_type=='SPOBS1':
-                    assert len(sta.channels) == 2
-                else:
-                    assert len(sta.channels) == 4
+                assert len(sta.channels) == 4
+        starttime, endtime = UTCDateTime(2005, 1, 1), UTCDateTime(2005, 1, 1)
+        for sample_rate in [62.5, 125., 250., 500.]:
+            for obs_type in ['SPOBS1']:
+                sta = load_station(obs_type, sample_rate, starttime=starttime,
+                                   endtime=endtime)
+                assert isinstance(sta, Station)
+                assert len(sta.channels) == 2
 
 
 def suite():

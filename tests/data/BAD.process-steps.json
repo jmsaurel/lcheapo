@@ -11,7 +11,8 @@
                 "date": "2021-06-16T20:48:04",
                 "exit_status": -1,
                 "messages": [
-                    "  BAD.bad.lch=>BAD.fix.lch: Finished at block 9999 (0 BUG1s, 0 BUG2s, 0 BUG3s, 48 Time Tears, 0 unexpected header values)"
+                    "  BAD.bad.lch=>BAD.fix.lch: Finished at block 9999",
+                    "  0 BUG1s, 0 BUG2s, 0 BUG3s, 48 Time Tears, 0 unexpected header values"
                 ],
                 "parameters": {
                     "directory_paths": {
