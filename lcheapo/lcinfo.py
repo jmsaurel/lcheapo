@@ -6,7 +6,9 @@ Return basic information about LCHEAPO files
 By default, returns number of channels, samp_rate and start
 and end of each file
 """
-from .sdpchain import ProcessStep
+from sdpchainpy import ProcessStep
+
+# from .sdpchain import ProcessStep
 from .lcheapo_utils import (LCDataBlock, LCDiskHeader)
 import argparse
 import os
@@ -61,7 +63,7 @@ def _get_times(fp, block_num, samp_rate):
     lcData.readBlock(fp)
     first_time = lcData.getDateTime()
     last_time = first_time + timedelta(seconds=lcData.numberOfSamples
-                                               / samp_rate)
+                                       / samp_rate)
     return first_time, last_time
 
 
@@ -80,7 +82,7 @@ def _print_Info(fp):
         sample_rate = lcHeader.realSampleRate
         n_channels = lcHeader.numberOfChannels
         first_data_block = lcHeader.dataStart
-    
+
     fp.seek(0, 2)                # Seek end of file
     last_data_block = int(fp.tell() / 512) - 1
 
@@ -105,7 +107,7 @@ def _estimate_parms(fp, first_data_block, imax=10):
         if lcData.muxChannel + 1 > n_channels:
             n_channels = lcData.muxChannel + 1
     # print(f'{n_channels=}')
-    if n_channels >=imax:
+    if n_channels >= imax:
         raise ValueError('File indicates more channels {:d} than tested {:d}'
                          .format(n_channels, imax))
     block_timedelta = (_get_times(fp, first_data_block + n_channels, 1)[0]
@@ -115,8 +117,9 @@ def _estimate_parms(fp, first_data_block, imax=10):
     rate_multiplier = sample_rate/base_sample_rate
     if not rate_multiplier == int(rate_multiplier):
         raise ValueError('Sample rate ({:f}) is not a multiple of {:f}'
-                        .format (sample_rate, base_sample_rate))
+                         .format(sample_rate, base_sample_rate))
     return n_channels, sample_rate
+
 
 if __name__ == '__main__':
     main()

@@ -66,7 +66,7 @@ def validate(filename, schema_file=DEFAULT_SCHEMA, format=None, type=None,
                   format(schema_file))
             print(str(e))
             return False
-        except:
+        except Exception:
             print(f"Error loading JSON schema file: {schema_file}")
             print(sys.exc_info()[1])
             return False
@@ -139,7 +139,7 @@ def read_yaml_json(filename, format=None, debug=False):
         if format == "YAML":
             try:
                 element = yaml.safe_load(f)
-            except ParserError:
+            except yaml.ParserError:
                 print(f"Error parsing YAML file: {filename}")
                 print(sys.exc_info()[1])
                 return
@@ -150,7 +150,7 @@ def read_yaml_json(filename, format=None, debug=False):
                 print(f"JSONDecodeError: Error loading JSON file: {filename}")
                 print(str(e))
                 return
-            except:
+            except Exception:
                 print(f"Error loading JSON file: {filename}")
                 print(sys.exc_info()[1])
                 return
@@ -248,17 +248,18 @@ def _validate_script(argv=None):
     parser = ArgumentParser(prog='yaml_json', description=__doc__)
     parser.add_argument("input_file", help="Input file")
     parser.add_argument("--schema", default=None,
-        help='Specify the schema file (overrides filename interpretation)')
+                        help='Specify schema file (override filename interpretation)')
     parser.add_argument("-t", "--type", choices=VALID_TYPES, default=None,
-        help='Specify file type (overrides filename interpretation)')
+                        help='Specify file type (override filename interpretation)')
     parser.add_argument("-f", "--format", choices=VALID_FORMATS, default=None,
-        help='Specify file format (overrides filename interpretation)')
+                        help='Specify file format (override filename interpretation)')
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="increase output verbosiy")
     args = parser.parse_args()
 
     validate(args.input_file, format=args.format, type=args.type,
              verbose=args.verbose)
+
 
 if __name__ == "__main__":
     _validate_script()

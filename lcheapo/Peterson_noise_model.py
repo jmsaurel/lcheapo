@@ -2,6 +2,8 @@
 """
 Peterson Low and High noise models
 """
+import sys
+
 import numpy as np
 
 #        Period    Level       Slope
@@ -41,6 +43,7 @@ HPAB = [[0.10,    -108.73,   -17.23],
         [354.80,  -206.66,    31.63],
         [100000,  -206.66,    31.63]]
 
+
 def PetersonNoiseModel(periods, as_freqs=False):
     """
     Return Peterson low and high seismological noise models
@@ -56,7 +59,7 @@ def PetersonNoiseModel(periods, as_freqs=False):
         lownoise = _fit_points(periods, LPAB)
         highnoise = _fit_points(periods, HPAB)
     else:
-        periods = np.power(periods[::-1],-1)
+        periods = np.power(periods[::-1], -1)
         lownoise = _fit_points(periods, LPAB)
         highnoise = _fit_points(periods, HPAB)
         lownoise = lownoise[::-1]
@@ -67,11 +70,10 @@ def PetersonNoiseModel(periods, as_freqs=False):
 def _fit_points(periods, model):
     """
     Fit points to a noise model
-    
-    :param periods: periods in increasing order
-    :type periods: list
-    :param model: list of [period, value, slope]
-    :type model: list of lists
+
+    Args:
+        periods (list): periods in increasing order
+        model (list of list): list of [period, value, slope]
     """
     x = np.log10(periods)
     xp = np.log10([x[0] for x in model])
@@ -79,6 +81,7 @@ def _fit_points(periods, model):
     assert np.all(np.diff(x) > 0), 'x is not increasing'
     assert np.all(np.diff(xp) > 0), 'xp is not increasing'
     return np.interp(x, xp, yp, left=np.nan, right=np.nan)
+
 
 if __name__ == '__main__':
     print('not a command line code')

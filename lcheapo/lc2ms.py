@@ -6,35 +6,57 @@ create miniSEED file(s) from LCHEAPO file(s)
 import argparse
 # import os
 import sys
-import datetime
+# import datetime
 import inspect
 from pathlib import Path
 
-from .sdpchain import ProcessStep
+from sdpchainpy import ProcessStep
 
-from .chan_maps import chan_maps
+# from .sdpchain import ProcessStep
+from .instrument_metadata import chan_maps
 from .lcread import read as lcread
 from .version import __version__
 
 
-def lc2ms():
-    """
-    Convert fixed LCHEAPO data to basic miniSEED files
+def _verify_station_code(s):
+    if not s.isalnum():
+        raise argparse.ArgumentTypeError(f'Station code "{s}" has non-alphanumeric values')
+    if len(s) > 5:
+        raise argparse.ArgumentTypeError(f'Station code "{s}" is > 5 characters long')
+    return s
 
-    NO drift or leapsecond correction:
+def _verify_network_code(s):
+    if not s.isalnum():
+        raise argparse.ArgumentTypeError(f'Network code "{s}" has non-alphanumeric values')
+    if len(s) > 2:
+        raise argparse.ArgumentTypeError(f'Network code "{s}" is > 2 characters long')
+    return s
+
+
+def main():
     """
-    print(lc2ms.__doc__)
+    Convert LCHEAPO data to basic miniSEED files for Epos-France SMM A-node
+    One file per trace, filenames are {seed.id}.{YYYYmmdd}T{HHMM}.mseed
+    No drift or leapsecond correction:
+    """
+    print(main.__doc__)
     parser = argparse.ArgumentParser(
-        description=inspect.cleandoc(lc2ms.__doc__),
+        description=inspect.cleandoc(main.__doc__),
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("infile", help="Input filename")
+    parser.add_argument("input_files", nargs='+',
+                        help="Input filename(s).  If there are captured "
+                             "wildcards (put in '' so that they aren't "
+                             "interpreted by the shell), will expand them "
+                             "in the input directory")
     parser.add_argument("-t", "--obs_type", default='SPOBS2',
                         help="obs type.  Controls channel and location codes",
                         choices=[s for s in chan_maps])
     parser.add_argument("--station", default='SSSSS',
-                        help="station code for this instrument")
+                        type=_verify_station_code,
+                        help="station code for this instrument (default=SSSSS)")
     parser.add_argument("--network", default='XX',
-                        help="network code for this instrument")
+                        type=_verify_network_code,
+                        help="network code for this instrument (default=XX)")
     parser.add_argument("-d", dest="base_dir", metavar="BASE_DIR",
                         default='.', help="base directory for files")
     parser.add_argument("-i", dest="in_dir", metavar="IN_DIR", default='.',
@@ -54,29 +76,30 @@ def lc2ms():
         sys.exit(0)
 
     # ADJUST INPUT PARAMETERS
-    args.input_files = [args.infile]
-    process_step = ProcessStep('lc2ms_weak',
+    process_step = ProcessStep('lc2ms_py',
                                " ".join(sys.argv),
                                app_description=__doc__,
                                app_version=__version__,
                                parameters=parameters)
-    args.in_dir, args.out_dir, args.infiles = ProcessStep.setup_paths(args)
+    args.in_dir, args.out_dir, args.input_files = ProcessStep.setup_paths(args)
     # Expand captured wildcards
-    # args.infiles = [x.name for f in args.infiles
+    # args.input_files = [x.name for f in args.infiles
     #                 for x in Path(args.in_dir).glob(f)]
 
-    stream = lcread(Path(args.in_dir) / args.infile, network=args.network,
-                    station=args.station, obs_type=args.obs_type,
-                    starttime=0,
-                    endtime = 1*86400*365.25) # For up to 1 year of data
-    out_dir = Path(args.out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out_files = []
-    for tr in stream:
-        s = tr.stats
-        out_files.append(f'{s.network}.{s.station}.{s.location}.{s.channel}.mseed')
-        fname = str(out_dir / out_files[-1])
-        tr.write(fname, format='MSEED', encoding='STEIM1', reclen=4096)
+    for infile in args.input_files:
+        stream = lcread(Path(args.in_dir) / infile, network=args.network,
+                        station=args.station, obs_type=args.obs_type,
+                        starttime=0,
+                        endtime=1*86400*365.25)  # For up to 1 year of data
+        out_dir = Path(args.out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_files = []
+        for tr in stream:
+            s = tr.stats
+            out_files.append('{}_{}.mseed'.format(
+                tr.id, s.starttime.strftime("%Y%m%dT%H%M")))
+            fname = str(out_dir / out_files[-1])
+            tr.write(fname, format='MSEED', encoding='STEIM1', reclen=4096)
     return_code = 0
     process_step.output_files = out_files
     process_step.exit_code = return_code

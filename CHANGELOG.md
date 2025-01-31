@@ -34,3 +34,25 @@ b0 | Combined lcheapo and lcheapo_obspy
 .5.post1 | fixed bug in lc2SDS_weak argument handling
 .6 | Removed `import future` (2.x module) because causes crashes with some Pythons
 .7 | Fixed ProcessSteps calling bug in `sdpcat`
+.8 | Added lccut script creation to `lcfix`, changed creation of process-steps.json
+.  | to put all in one file, make backups of old versions
+
+## v2.0
+
+- Renamed `lc2ms_weak` to `lc2ms_py`
+- Renamed `lc2SDS_weak` to `lc2SDS_py`
+- Added function `lcread:read_station()` and use in `lcread`
+- Allow lc2SDS_weak to create/append to a StationXML file
+- `lc2SDS_py` now sets quality flag to Q or D
+- Various debugging
+
+patch version | description
+------------- | --------------
+.0.post1      | include examples on pypi, require module sdpchainpy
+.0.post2      | handle read length different from expected, removed ``endDate`` from instrument responses (except SPOBS1, and BBOBS1 pre-2012)
+
+### v2.1
+
+- lcread() should work with numpy2.0 (partially verified)
+- lc2SDS\_py and lc2ms\_py:
+    - argparse limits station names to 5 characters, network names to 2

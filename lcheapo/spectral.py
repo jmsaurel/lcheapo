@@ -37,8 +37,7 @@ class PSD:
         """
         String describing object
         """
-        s = 'PSD(freqs, data, units={}, stats=stats) '.format(
-            self.units, self.stats)
+        s = f'PSD(freqs, data, units={self.units}, stats={self.stats}) '
         s += '<data.shape={}, freqs={:g}-{:g}, seed_code={}>'.format(
             self.data.shape, self.freqs[0], self.freqs[-1],
             _seed_code(self.stats))
@@ -59,7 +58,7 @@ class PSD:
         :param window_length: minimum FFT window length in seconds
         """
         assert type(tr) == Trace
-        
+
         sampling_rate = tr.stats.sampling_rate
         data_len = tr.stats.endtime - tr.stats.starttime
         if window_length > data_len/2:
@@ -105,10 +104,10 @@ class PSD:
             # Make omega with the same conventions as spec
             w = 2.0 * m.pi * _freq
             # Remove response
-            if tr.stats.response.response_stages[0].input_units.upper()[:2] == "PA":
-                print('Channel {} has input_units "{}": treating as hydrophone'.
-                      format(tr.stats.channel,
-                             tr.stats.response.response_stages[0].input_units))
+            iu = tr.stats.response.response_stages[0].input_units
+            if iu.upper()[:2] == "PA":
+                print(f'Channel {tr.stats.channel} has input_units "{iu}"'
+                      ': treating as hydrophone')
                 spec = spec / respamp
                 PSD_units = "dB ref 1 Pa^2/Hz"
             else:
@@ -131,8 +130,8 @@ class PSD:
         ax.semilogx(self.freqs, 10 * np.log10(self.data))
         if show_Peterson and not _seed_code(self.stats)[-1] == 'H':
             lownoise, highnoise = PetersonNoiseModel(self.freqs, True)
-            ax.semilogx(self.freqs, lownoise,'--')
-            ax.semilogx(self.freqs, highnoise,'--')
+            ax.semilogx(self.freqs, lownoise, '--')
+            ax.semilogx(self.freqs, highnoise, '--')
         ax.set_ylabel(self.units)
         # ax.title()
         ax.set_title(_seed_code(self.stats))
@@ -149,7 +148,7 @@ class PSDs:
     def __init__(self, PSDs=None):
         assert isinstance(PSDs, list)
         for p in PSDs:
-            assert isinstance(p,PSD)
+            assert isinstance(p, PSD)
         self.PSDs = PSDs
 
     def __str__(self):

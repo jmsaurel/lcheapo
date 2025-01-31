@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# flake8: noqa: W605
 """
 Read LCHEAPO data into an obspy stream
 """
 import warnings
 import struct
-import os
-import sys
-import inspect
+# import os
+# import sys
+# import inspect
 
 import numpy as np
 from obspy.core import UTCDateTime, Stream, Trace
-from obspy import read_inventory
+# from obspy import read_inventory
 
 from .lcheapo_utils import (LCDataBlock, LCDiskHeader)
-from .chan_maps import chan_maps
+from .instrument_metadata import chan_maps, load_station
 
 
 def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
@@ -26,7 +27,7 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
 
     Args:
         filename (str): LCHEAPO filename
-        starttime (:class:`~obspy.core.utcdatetime.UTCDateTime`): 
+        starttime (:class:`~obspy.core.utcdatetime.UTCDateTime`):
             Start time as a ISO8601 string, a UTCDateTime object,
             or a number (seconds after the file start)
         endtime (:class:`~obspy.core.utcdatetime.UTCDateTime`):
@@ -37,7 +38,7 @@ def read(filename, starttime=None, endtime=None, network='XX', station='SSSSS',
         obs_type (str): OBS type (must match a key in chan_maps)
         verbose (bool): print out info about first and last read data
 
-    Returns: 
+    Returns:
         stream (:class:`~obspy.core.stream.Stream`): read data
 
     Example:
@@ -179,7 +180,7 @@ def _read_data(starttime, endtime, fp, verbose=False):
         starttime (:class:`~obspy.UTCDateTime`): start time
         endtime (:class:`~obspy.UTCDateTime`): end time
         fp (:class:`file`): file pointer
-    
+
     Returns
         stream (:class:`obspy.core.Stream`):
 
@@ -205,7 +206,16 @@ def _read_data(starttime, endtime, fp, verbose=False):
 
     # Read the data and arrange in read_blocks*512 array
     buf = fp.read(read_blocks * 512)
-    dt = np.dtype('b')
+    if not (lb:=len(buf)) == read_blocks * 512:
+        if lb%512 == 0:
+            print(f'tried to read {read_blocks} blocks, only found {int(lb/512)}, adjusting...')
+        else:
+            print(f'tried to read {read_blocks} blocks, only found {lb/512}, adjusting...')
+            buf = buf[:lb-remainder]
+            lb = len(buf)
+            assert lb%512 == 0
+        read_blocks = int(lb/512)
+    dt = np.dtype('b')  # signed byte (why?)
     all = np.frombuffer(buf, dtype=dt)
     a = np.reshape(all, (read_blocks, 512))  # keep data contiguous
     # The following takes the same amount of time ...
@@ -240,11 +250,9 @@ def _read_data(starttime, endtime, fp, verbose=False):
         # Get data
         chan_data = data[i:read_blocks:n_chans, :].flatten()
         # could be quicker using the np.flat() iterator ?
-        t32 = np.array(chan_data[0: 498*chan_blocks: 3]*(1 << 16)
-                       + chan_data[1: 498*chan_blocks: 3].astype('B')
-                       * (1 << 8)
-                       + chan_data[2: 498*chan_blocks: 3].astype('B'),
-                       dtype='int32')
+        t32 = (np.int32(chan_data[0: 498*chan_blocks: 3])*(1 << 16) +
+               np.int32(chan_data[1: 498*chan_blocks: 3].astype('B'))*(1 << 8) +
+               np.int32(chan_data[2: 498*chan_blocks: 3].astype('B')))
         stream.append(Trace(data=t32, header=stats))
     eps = 1e-6
     stream.trim(starttime=starttime, endtime=endtime-eps, nearest_sample=False)
@@ -285,9 +293,9 @@ def _convert_time_bounds(starttime, endtime, fp):
     Return starttime and endtime as UTCDateTimes
 
     Also makes sure that starttime and endtime are within the data bounds
-    
+
     Args:
-        startime (str, float or UTCDate time): starttime.  If float, 
+        startime (str, float or UTCDate time): starttime.  If float,
             seconds from file start
         endtime (str, float or UTCDate time): end time.  If float, seconds
             after starttime
@@ -374,43 +382,32 @@ def _stuff_info(stream, network, station, obs_type):
         trace.stats.channel = band_code_sps(chan[0], sps) + chan[1:3]
         if len(loc) > 1:
             trace.stats.location = loc
-        trace.stats.response = _load_response(obs_type, trace.stats.channel,
+        trace.stats.response = _load_response(obs_type, sps, trace.stats.channel,
                                               trace.stats.starttime)
     return stream
 
 
-def _load_response(obs_type, channel, start_time):
+def _load_response(obs_type, sample_rate, channel, start_time):
     """
     Load response corresponding to OBS type and component
 
     Args:
         obs_type (str): obs type (must be in channel_maps)
         channel (str): trace channel code
-        datetime (:class:`~obspy.UTCDateTime`): time for which to get response
+        start_time (:class:`~obspy.UTCDateTime`): time for which to get response
 
     Returns:
         resp (:class:`~obspy.core.response.Response`): instrument response
     """
-    assert obs_type in chan_maps
+    station = load_station(obs_type, sample_rate, channel=channel, starttime=start_time)
     try:
-        basepath = os.path.dirname(os.path.abspath(inspect.getfile(
-                                       inspect.currentframe())))
-        inv_file = os.path.join(basepath, 'data', f'{obs_type}.station.xml')
-        inv = read_inventory(inv_file)
-    except Exception:
-        print(f'Could not read inventory file {inv_file}')
-        sys.exit()
-
-    try:
-        resp = inv.select(channel=channel, time=start_time)[0][0][0].response
+        resp = station.select(channel=channel, time=start_time)[0].response
     except Exception:
         print(f'No response matching "{channel}" at {start_time}')
         print('Options were: ')
-        for net in inv:
-            for sta in net:
-                for ch in sta:
-                    print(' "{}" : {} - {}'.format(ch.code, ch.start_date,
-                                                   ch.end_date))
+        for ch in station:
+            print(' "{}" : {} - {}'.format(ch.code, ch.start_date,
+                                           ch.end_date))
         return []
     return resp
 
@@ -434,12 +431,15 @@ def _valid_chan_map(chan_map):
                         return True
     return False
 
-### THE FOLLOWING DUPICATES LCPLOT.PY BECAUSE I CAN'T CHANGE MODULE REFERENCES
-### WITHOUT INTERNET
+# ######################
+# THE FOLLOWING DUPICATES LCPLOT.PY BECAUSE I CAN'T CHANGE MODULE REFERENCES
+# WITHOUT INTERNET
+# ######################
 
 
 import argparse
 import re
+
 
 def _plot_command():
     """
@@ -460,7 +460,7 @@ def _plot_command():
     epilog += "    haha-MOVA-OBS1-blah.lch | '\-(.+)\-'     | MOVA-OBS1 \n"
     epilog += "    haha-MOVA-OBS1-blah.lch | '\(-.+)\-.+\-' | MOVA \n"
     epilog += "    haha-MOVA-OBS1-blah.lch | '\-.+\-(.+)\-' | OBS1 \n"
-    epilog += "    MOVA/haha.raw.lch       | '([^\/]+)'     | MOVA \n"
+    epilog += "    MOVA/haha.raw.lch       | '([^\/]+)'     | MOVA \n" 
 
     parser = argparse.ArgumentParser(
         description=__doc__, epilog=epilog,

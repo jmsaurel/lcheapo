@@ -1,4 +1,3 @@
-include lcheapo/_examples/*.yaml
-include lcheapo/_examples/*.py
+graft lcheapo/_examples
 graft lcheapo/data
 include ToDo.rst

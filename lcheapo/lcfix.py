@@ -15,8 +15,11 @@ import logging      # for logging information
 from datetime import timedelta
 from pathlib import Path
 
+from sdpchainpy import ProcessStep
+from progress.bar import IncrementalBar
+
 from .lcheapo_utils import (LCDataBlock, LCDiskHeader, LCDirEntry)
-from .sdpchain import ProcessStep
+# from .sdpchain import ProcessStep
 from .version import __version__
 
 # ------------------------------------
@@ -118,6 +121,7 @@ def main():
     numInFiles = len(args.input_files)
     firstFile = True
     for fname in args.input_files:
+
         ifp1 = open(os.path.join(args.in_dir, fname), 'rb')
 
         # Find and copy the disk header
@@ -154,7 +158,7 @@ def main():
                                         ifp1, firstInpBlock)
 
         # Process file
-        (loopcounters, msg, ofname) = _process_input_file(
+        (loopcounters, new_msgs, ofname) = _process_input_file(
             ifp1, fname, outFileRoot, lcHeader, firstInpBlock,
             lastInpBlock, firstFile, args, commandQ, responseQ)
         ifp1.close()
@@ -162,7 +166,7 @@ def main():
         # Update counters
         counters += loopcounters
         n_files += 1
-        msgs.append(msg)
+        msgs.extend(new_msgs)
         outFiles.append(ofname)
 
         firstFile = False
@@ -230,9 +234,16 @@ def _get_options():
     parser.add_argument("-o", dest="out_dir", metavar="OUT_DIR", default='.',
                         help="output file directory (absolute, " +
                              "or relative to base_dir)")
+    parser.add_argument("-c", "--lccut", dest="lccut_file", default=False,
+                        action="store_true",
+                        help="generate an lccut script file if there are time"
+                             "tears (USE ONLY IF ALL TIME TEARS ARE VERIFIED"
+                             "TRUE HOLES IN THE DATA, NOT A CLOCK PROBLEM)")
     parser.add_argument("-F", "--forceTimes", dest="forceTime", default=False,
                         action="store_true",
-                        help="Force timetags to be consecutive")
+                        help="Force timetags to be consecutive (USE ONLY IF"
+                             "YOU HAVE TIME TEARS AND YOU ARE SURE THE DATA"
+                             "ARE, IN FACT, CONSECUTIVE)")
     args = parser.parse_args()
     global process_step
     process_step = ProcessStep(
@@ -432,30 +443,22 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     """
     Process one LCHEAPO file
 
-    :param ifp1: input file pointer
-    :type  ifp1: file object
-    :param fname: input file name (without path)
-    :type  fname: string
-    :param outFileRoot: base output file name (with path)
-    :type  outFileRoot: string
-    :param lcHeader: header taken from the first input file
-    :type  lcHeader: :class: `lcheapo:lcHeader`
-    :param firstInpBlock: First block with channel 0 data
-    :type  firstInpBlock: integer
-    :param lastInpBlock: Last block number in the input file
-    :type  lastInpBlock: integer
-    :param hasHeader: Does the input file have a header?
-    :type  hasHeader: boolean
-    :param args: command line arguments
-    :type  args: :class: `argparse.Namespace`
-    :param commandQ: something to do with elegant quitting?
-    :type  commandQ: :class: Queue.Queue
-    :param responseQ: something to do with elegant quitting?
-    :type  responseQ: :class: Queue.Queue
-    :param debug: Print out debugging information?
-    :type  debug: boolean
-    :return: counters, message, fname_timetears
-    :rtype: `tuple`
+    Args:
+        ifp1 (file object): input file pointer
+        fname (str): input file name (without path)
+        outFileRoot (str): base output file name (with path)
+        lcHeader (class: `lcheapo:lcHeader`): header taken from the first
+            input file
+        firstInpBlock (int): First block with channel 0 data
+        lastInpBlock (int): Last block number in the input file
+        hasHeader (bool): Does the input file have a header?
+        args (:class: `argparse.Namespace`): command line arguments
+        commandQ (:class: `Queue.Queue`): something for elegant quitting?
+        responseQ (:class: `Queue.Queue`): something for elegant quitting?
+        debug (bool): Print out debugging information
+
+    Returns:
+        (tuple): counters, message, fname_timetears
     """
     # Declare variables
     global startBUG1A, printHeader, lcDir, warnings
@@ -465,10 +468,9 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     printHeader = ''
     startBUG1A = -1
     prev_mux_chan = -1
-    # prev_block_flag = 73
-    # prev_num_samps = 166
-    # prev_U1 = 3
-    # prev_U2 = 166
+    # placeholder to avoid writing multiple lccut lines for one time tear
+    lccut_prev_time = None
+    lccut_prev_block = 0
     verbosity = args.verbosity
     consecIdentTimeErrors, oldDiff = 0, 0
     lcData = LCDataBlock()
@@ -481,6 +483,9 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
         ofp1 = open(outfilename, 'wb')
     fname_timetears = outFileRoot + '.fix.timetears.txt'
     oftt = open(fname_timetears, 'w')
+    of_lccut = None
+    if args.lccut_file is True:
+        of_lccut = open('run_lccut.sh', 'w')
 
     # -----------------------------
     # Copy the disk header to the output file
@@ -522,8 +527,11 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     if debug:
         logging.info("  DEBUGGING")
 
+    bar = IncrementalBar(f'Processing {fname}', index=firstInpBlock,
+                         max=lastInpBlock)
     # Loop over blocks, comparing expected and actual times.
     for i in range(firstInpBlock, lastInpBlock+1):
+        bar.next()
         if debug and (i > lastInpBlock-10):
             logging.info("  BLOCK {:d}".format(i))
         lcData.readBlock(ifp1)
@@ -629,9 +637,17 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
                                 txt = fmt.format(currBlock,
                                                  lcData.muxChannel,
                                                  expect_time, t)
+                                print()  # Newline after progress bar
                                 logging.warning(printHeader + txt)
                                 warnings += 1
                                 print(printHeader + txt, file=oftt)
+                                if of_lccut is not None:
+                                    if lccut_prev_time is None:
+                                        of_lccut.write('DIR="cut"\n')
+                                    if not t == lccut_prev_time:
+                                        of_lccut.write(f'lccut --start {lccut_prev_block } --end {currBlock-1} -o $DIR {fname}\n')
+                                        lccut_prev_time = t
+                                        lccut_prev_block = currBlock
                                 counters.time_tear += 1
                     # Go back to original position
                     ifp1.seek(pos)
@@ -642,6 +658,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
                         if startBUG1A < 0:
                             txt = "{}{:8d}: LCHEAPO BUG #1a. BUG #1s " +\
                                   "repeating at 500-block intervals"
+                            print()  # Newline after progress bar
                             logging.info(txt.format(printHeader,
                                                     currBlock))
                             startBUG1A = currBlock
@@ -649,6 +666,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
                     else:
                         txt = "{}{:8d}: LCHEAPO BUG #1. CH{:d} " +\
                               "Expected Time: {}, Got: {} "
+                        print()  # Newline after progress bar
                         logging.info(
                             txt.format(printHeader, currBlock,
                                        lcData.muxChannel, expect_time, t))
@@ -660,6 +678,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
                     lastBUG1s.append(currBlock)
         else:
             if args.forceTime and (consecIdentTimeErrors > 0):
+                print()  # Newline after progress bar
                 logging.info(forceTimeErrorStr +
                              "{:d} blocks".format(consecIdentTimeErrors))
                 consecIdentTimeErrors = 0
@@ -682,6 +701,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
         # prev_U1 = lcData.U1
         # prev_U2 = lcData.U2
     # END LOOP THROUGH EVERY BLOCK
+    bar.finish()
     if responseQ:
         responseQ.put((i, lastInpBlock, counters.bug1, counters.time_tear))
 
@@ -798,7 +818,7 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
             lcDir.writeDirEntry(ofp1)
         iDir += 1
 
-    message = _print_blockloop_message(fname, outfilename, args.forceTime, i,
+    messages = _print_blockloop_message(fname, outfilename, args.forceTime, i,
                                        counters)
     if iDir != lcHeader.dirCount:
         if hasHeader:
@@ -830,6 +850,11 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
         ofp1.close()
         ofp_data.close()
     oftt.close()
+    if of_lccut is not None:
+        if not lccut_prev_block == 0:
+            of_lccut.write('lccut --start {} -o $DIR {}\n'.format(
+                lccut_prev_block, fname))
+        of_lccut.close()
 
     # If there is no tear, remove the timetears file
     if counters.time_tear == 0:
@@ -837,8 +862,8 @@ def _process_input_file(ifp1, fname, outFileRoot, lcHeader,
     # Otherwise, if not forced time corrections, remove the output data file
     elif not args.forceTime:
         os.remove(outfilename)
-        return counters, message, fname_timetears
-    return counters, message, outfilename
+        return counters, messages, fname_timetears
+    return counters, messages, outfilename
 
 
 def _log_error_2(type, printHeader, currBlock, chan, expect_time, t):
@@ -850,15 +875,17 @@ def _log_error_2(type, printHeader, currBlock, chan, expect_time, t):
 
 def _print_blockloop_message(fname, outfilename, forceTime, i,
                              counters):
+    msgs=[]
     # Print out end-of-loop message for one file
-    msg = "  {}=>{}: Finished at block {:d} ".format(
-        fname, os.path.split(outfilename)[1], i)
+    msgs.append("  {}=>{}: Finished at block {:d}".format(
+        fname, os.path.split(outfilename)[1], i))
     if forceTime:
-        msg += f"({counters.time_tear:d} time errors FORCEABLY corrected)"
+        msgs.append(f"  ({counters.time_tear:d} time errors FORCEABLY corrected)")
     else:
-        msg += "(" + str(counters) + ")"
-    logging.info(msg)
-    return msg
+        msgs.append(f"  {str(counters)}")
+    for x in msgs:
+        logging.info(x)
+    return msgs
 
 
 def _get_next_time(ifp1, channel, pos):

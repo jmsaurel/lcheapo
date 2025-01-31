@@ -4,14 +4,15 @@
             "application": {
                 "description": "Fix common bugs in LCHEAPO data files",
                 "name": "lcfix",
-                "version": "0.73.post2"
+                "version": "1.0.8"
             },
             "execution": {
                 "command_line": "/Users/crawford/opt/anaconda3/envs/obspy/bin/lcfix -d /Users/crawford/_Work/Programming/lcheapo/tests -i data BUGGY.raw.lch",
                 "date": "2021-06-16T20:44:08",
                 "exit_status": 0,
                 "messages": [
-                    "  BUGGY.raw.lch=>BUGGY.fix.lch: Finished at block 9999 (52 BUG1s, 0 BUG2s, 0 BUG3s, 0 Time Tears, 0 unexpected header values)"
+                    "  BUGGY.raw.lch=>BUGGY.fix.lch: Finished at block 9999",
+                    "  52 BUG1s, 0 BUG2s, 0 BUG3s, 0 Time Tears, 0 unexpected header values"
                 ],
                 "parameters": {
                     "directory_paths": {
@@ -24,6 +25,7 @@
                     "input_files": [
                         "BUGGY.raw.lch"
                     ],
+                    "lccut_file": false,
                     "output_files": [
                         "BUGGY.fix.lch"
                     ],

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Make a directory containing lcheapo examples
+"""
 import argparse
 import shutil
 import os

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# flake8: noqa: W605
 """
 Read LCHEAPO data into an obspy stream
 """
@@ -8,7 +9,7 @@ import re
 
 from obspy.core import UTCDateTime, Stream
 
-from .chan_maps import chan_maps
+from .instrument_metadata import chan_maps
 from .lcread import read, get_data_timelimits
 
 

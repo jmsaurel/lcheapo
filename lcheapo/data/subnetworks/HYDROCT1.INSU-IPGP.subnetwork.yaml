@@ -1,0 +1,79 @@
+---
+format_version: "1.0"
+revision:
+    authors: [{$ref: "persons/Wayne_Crawford.person.yaml"}]
+    date: "2024-01-27"
+yaml_anchors:
+    - &LOCATIONS
+        locations:
+            "00":
+                base: {$ref: 'location_bases/INSU-IPGP.location_base.yaml'}
+                position: {lon.deg: 0.0, lat.deg: 0.0, elev.m: 0}
+                modifications: {uncertainties.m: {lat: 0, lon: 0, elev: 0}}
+                notes: ["Hydroctopus station"]
+            "01":
+                base: {$ref: 'location_bases/INSU-IPGP.location_base.yaml'}
+                position: {lon.deg: 0.0, lat.deg: 0.0, elev.m: 0}
+                modifications: {uncertainties.m: {lat: 0, lon: 0, elev: 0}}
+                notes: ["Hydrophone 1"]
+            "02":
+                base: {$ref: 'location_bases/INSU-IPGP.location_base.yaml'}
+                position: {lon.deg: 0.0, lat.deg: 0.0, elev.m: 0}
+                modifications: {uncertainties.m: {lat: 0, lon: 0, elev: 0}}
+                notes: ["Hydrophone 2"]
+            "03":
+                base: {$ref: 'location_bases/INSU-IPGP.location_base.yaml'}
+                position: {lon.deg: 0.0, lat.deg: 0.0, elev.m: 0}
+                modifications: {uncertainties.m: {lat: 0, lon: 0, elev: 0}}
+                notes: ["Hydrophone 3"]
+            "04":
+                base: {$ref: 'location_bases/INSU-IPGP.location_base.yaml'}
+                position: {lon.deg: 0.0, lat.deg: 0.0, elev.m: 0}
+                modifications: {uncertainties.m: {lat: 0, lon: 0, elev: 0}}
+                notes: ["Hydrophone 4"]
+    
+subnetwork:
+    operators:
+        -   {$ref: "operators/INSU-IPGP.operator.yaml"}
+    network:
+        code: "XX"
+        start_date: "2015-01-01T00:00:00"
+        end_date: null
+        description: "All LCHEAPO HYDROCTOPUS configurations"
+    stations:
+        "HO_62":
+            start_date: "2016-01-01T00:00:00"
+            end_date: null
+            location_code: "00"
+            <<: *LOCATIONS
+            instrumentation:
+                base: {$ref: "instrumentation_bases/HYDROCT1.instrumentation_base.yaml"}
+                configuration: 'LC2000'
+                datalogger_configuration: "62.5sps"
+        "HO125":
+            start_date: "2016-01-01T00:00:00"
+            end_date: null
+            location_code: "00"
+            <<: *LOCATIONS
+            instrumentation:
+                base: {$ref: "instrumentation_bases/HYDROCT1.instrumentation_base.yaml"}
+                configuration: 'LC2000'
+                datalogger_configuration: "125sps"
+        "HO250":
+            start_date: "2016-01-01T00:00:00"
+            end_date: null
+            location_code: "00"
+            <<: *LOCATIONS
+            instrumentation:
+                base: {$ref: "instrumentation_bases/HYDROCT1.instrumentation_base.yaml"}
+                configuration: 'LC2000'
+                datalogger_configuration: "250sps"
+        "HO500":
+            start_date: "2016-01-01T00:00:00"
+            end_date: null
+            location_code: "00"
+            <<: *LOCATIONS
+            instrumentation:
+                base: {$ref: "instrumentation_bases/HYDROCT1.instrumentation_base.yaml"}
+                configuration: 'LC2000'
+                datalogger_configuration: "500sps"

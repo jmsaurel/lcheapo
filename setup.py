@@ -18,36 +18,31 @@ setuptools.setup(
     url="https://github.com/WayneCrawford/lcheapo",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    # packages=['lcheapo'],
-    # package_dir={'lcheapo': 'lcheapo'},
-    # package_data={'lcheapo': ['data/*.xml', 'data/*.json',
-    #                                 '_examples/*.py', '_examples/*.yaml']},
     install_requires=[
           'obspy>=1.1',
-          'pyyaml>5.0'
+          'pyyaml>5.0',
           'jsonschema>=2.6',
           'jsonref>=0.2',
           'progress>=1.5',
+          'numpy<2.0',
+          'sdpchainpy>=1.0b2',
           'tiskitpy>=0.4'
       ],
     entry_points={
          'console_scripts': [
-             'sdpcat=lcheapo.sdpchain:sdpcat',
-             'sdpstep=lcheapo.sdpchain:sdpstep',
              'lcfix=lcheapo.lcfix:main',
              'lcdump=lcheapo.lcdump:main',
              'lccut=lcheapo.lccut:main',
              'lcinfo=lcheapo.lcinfo:main',
              'lcheader=lcheapo.lcheader:main',
              'lcplot=lcheapo.lcplot:main',
-             'lc2SDS_weak=lcheapo.lc2SDS:lc2SDS',
-             'lc2ms_weak=lcheapo.lc2ms:lc2ms',
-             'lctest=lcheapo.lctest:main',
+             'lc2SDS_py=lcheapo.lc2SDS:main',
+             'lc2ms_py=lcheapo.lc2ms:main',
              'lc_examples=lcheapo.lcputexamples:main'
          ]
     },
     python_requires='>=3.8',
-    classifiers=(
+    classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
         "Intended Audience :: Science/Research",
@@ -58,6 +53,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Physics"
-    ),
+    ],
     keywords='oceanography, marine, OBS'
 )

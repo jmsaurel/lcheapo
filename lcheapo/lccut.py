@@ -6,14 +6,16 @@ Cut an LCHEAPO file into pieces
 Used to remove bad/empty blocks, blocks start with 0 and are 512-bytes
 """
 import argparse
-import copy
+# import copy
 # import os
-from datetime import datetime as dt
+# from datetime import datetime as dt
 import sys
 from math import floor
 from pathlib import Path
 
-from .sdpchain import ProcessStep
+from sdpchainpy import ProcessStep
+
+# from .sdpchain import ProcessStep
 from .version import __version__
 
 BLOCK_SIZE = 512

@@ -7,20 +7,23 @@ import argparse
 import warnings
 # import os
 import sys
-import datetime
+# import datetime
 import inspect
 from pathlib import Path
 
+from sdpchainpy import ProcessStep
+
+# from .sdpchain import ProcessStep
 from obspy.core import UTCDateTime
-from .sdpchain import ProcessStep
+from obspy.core.inventory import Inventory, Network, read_inventory
 from progress.bar import IncrementalBar
 
-from .chan_maps import chan_maps
+from .instrument_metadata import chan_maps, load_station
 from .lcread import read as lcread, get_data_timelimits
 from .version import __version__
 
 
-def lc2SDS():
+def main():
     """
     Convert fixed LCHEAPO data to SeisComp Data Structure
 
@@ -33,7 +36,124 @@ def lc2SDS():
       (last one overwrites first)
     Writes to a directory named SDS/ in the output directory.
     """
-    # print(lc2SDS.__doc__)
+    args, process_step = _get_args()
+
+    # ADJUST INPUT PARAMETERS
+    if args.sync_start_times is not None:
+        args.sync_start_times = [UTCDateTime(x) for x in args.sync_start_times]
+    if args.sync_end_times is not None:
+        args.sync_end_times = [UTCDateTime(x) for x in args.sync_end_times]
+    ls_times, ls_types = _adjust_leapseconds(args.leapsecond_times,
+                                             args.leapsecond_types)
+
+    # Set up clock drift calculation
+    if args.sync_start_times and args.sync_end_times:
+        ref_start = args.sync_start_times[0]
+        if len(args.sync_start_times) > 1:
+            inst_start = args.sync_start_times[1]
+        else:
+            inst_start = ref_start
+        ref_end, inst_end = args.sync_end_times
+        if inst_start == 0:
+            inst_start = ref_start
+        inst_start_offset = inst_start - ref_start
+        inst_drift = ((inst_end - ref_end) - inst_start_offset)\
+            / (ref_end - inst_start)
+        print('instrument start offset = {:g}s, drift rate = {:.4g}'
+              .format(inst_start_offset, inst_drift))
+        quality_flag = 'Q'
+    else:
+        inst_start_offset = 0
+        inst_drift = 0
+        warnings.warn('Could not calculate clock drift, setting quality flag to "D')
+        quality_flag = 'D'
+
+    first_time = True
+    for infile in args.input_files:
+        lc_start, lc_end = get_data_timelimits(Path(args.in_dir) / infile)
+
+        # Set up clock drift calculation
+        if not (args.sync_start_times and args.sync_end_times):
+            ref_start, inst_start = lc_start, lc_start
+
+        if first_time is True:
+            first_start = lc_start
+            first_time = False
+
+        lc_start_day = lc_start.replace(hour=0, minute=0, second=0,
+                                        microsecond=0)
+        lc_end_day = lc_end.replace(hour=0, minute=0, second=0, microsecond=0)
+        stime = lc_start_day
+        bar = IncrementalBar(f'Processing {infile}',
+                             max=(lc_end_day-lc_start_day)/86400 + 1)
+        while stime <= lc_end_day:
+            inst_offset = inst_start_offset + inst_drift * (stime - ref_start)
+            sampling_rate = _write_daily(inst_offset, stime, infile,
+                                       args, ls_times, ls_types, quality_flag)
+            bar.next()
+            stime += 86400
+        bar.finish()
+
+    if args.xml is True:
+        _write_stationxml(sampling_rate, first_start, lc_end, args)
+
+    return_code = 0
+    process_step.exit_code = return_code
+    process_step.write(args.in_dir, args.out_dir)
+    sys.exit(return_code)
+
+
+def _write_stationxml(sampling_rate, start_date, end_date, args):
+    """
+    Write or overwrite StationXML file 'SDS.station.xml'
+
+    Args:
+        sampling_rate (float): data sampling rate (sps)
+        start_date(UTCDateTime)
+        end_date(UTCDateTime)
+        args (NameSpace): Command-line arguments
+    """
+    inv_file = Path(args.out_dir) / 'SDS.station.xml'
+    station = load_station(args.obs_type, sampling_rate, starttime=start_date)
+    station.code = args.station
+    for channel in station:
+        channel.start_date = start_date
+        channel.end_date = end_date
+    station.start_date = start_date
+    station.end_date = end_date
+    if inv_file.exists():
+        inv = read_inventory(inv_file, format='STATIONXML')
+        assert len(inv.select(network=args.network)) == 1
+        net = inv.networks[0]
+        if net.start_date > start_date:
+            net.start_date = start_date
+        if net.end_date < end_date:
+            net.end_date = end_date
+        net.stations.append(station)
+    else:
+        inv = Inventory(source='lc2SDS_py',
+                        networks=[Network(args.network,
+                                          stations=[station],
+                                          start_date=start_date,
+                                          end_date=end_date)])
+    inv.write(str(inv_file), format='STATIONXML')
+
+def _verify_station_code(s):
+    if not s.isalnum():
+        raise argparse.ArgumentTypeError(f'Station code "{s}" has non-alphanumeric values')
+    if len(s) > 5:
+        raise argparse.ArgumentTypeError(f'Station code "{s}" is > 5 characters long')
+    return s
+
+def _verify_network_code(s):
+    if not s.isalnum():
+        raise argparse.ArgumentTypeError(f'Network code "{s}" has non-alphanumeric values')
+    if len(s) > 2:
+        raise argparse.ArgumentTypeError(f'Network code "{s}" is > 2 characters long')
+    return s
+
+
+def _get_args():
     parser = argparse.ArgumentParser(
         description=inspect.cleandoc(lc2SDS.__doc__),
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -46,15 +166,17 @@ def lc2SDS():
                         help="obs type.  Controls channel and location codes",
                         choices=[s for s in chan_maps])
     parser.add_argument("--station", default='SSSSS',
-                        help="station code for this instrument")
+                        type=_verify_station_code,
+                        help="station code for this instrument (default=SSSSS)")
     parser.add_argument("--network", default='XX',
-                        help="network code for this instrument")
-    parser.add_argument("-s", "--start_times", nargs='+',
+                        type=_verify_network_code,
+                        help="network code for this instrument (default=XX)")
+    parser.add_argument("-s", "--sync_start_times", nargs='+',
                         metavar=("REF_START", "INST_START"),
                         help="Start datetimes for the reference (usually GPS) "
                              "and instrument.  If only one value is provided, "
                              "it will be used for both")
-    parser.add_argument("-e", "--end_times", nargs=2,
+    parser.add_argument("-e", "--sync_end_times", nargs=2,
                         metavar=("REF_END", "INST_END"),
                         help="End datetimes for the reference and instrument")
     parser.add_argument("--leapsecond_times", nargs='+',
@@ -73,6 +195,9 @@ def lc2SDS():
     parser.add_argument("-o", dest="out_dir", metavar="OUT_DIR", default='.',
                         help="output file directory (absolute, " +
                              "or relative to base_dir)")
+    parser.add_argument("-x", "--xml", action='store_true',
+                        help="Create/append StationXML file SDS.station.xml "
+                             "with station characteristics")
     parser.add_argument("-v", "--verbose", action='store_true',
                         help="verbose output")
     parser.add_argument("--version", action='store_true',
@@ -82,14 +207,6 @@ def lc2SDS():
     if args.version is True:
         print(f"Version {__version__}")
         sys.exit(0)
-    
-    # ADJUST INPUT PARAMETERS
-    if args.start_times is not None:
-        args.start_times = [UTCDateTime(x) for x in args.start_times]
-    if args.end_times is not None:
-        args.end_times = [UTCDateTime(x) for x in args.end_times]
-    ls_times, ls_types = _adjust_leapseconds(args.leapsecond_times,
-                                             args.leapsecond_types)
 
     # SETUP FOR PROCESS-STEPS
     process_step = ProcessStep('lc2SDS',
@@ -99,54 +216,15 @@ def lc2SDS():
                                parameters=parameters)
     args.in_dir, args.out_dir, args.input_files = ProcessStep.setup_paths(args)
     # Expand captured wildcards
-    #args.input_files = [x.name for f in args.input_files
-    #                for x in Path(args.in_dir).glob(f)]
+    # args.input_files = [x.name for f in args.input_files
+    #                     for x in Path(args.in_dir).glob(f)]
 
-    for infile in args.input_files:
-        lc_start, lc_end = get_data_timelimits(Path(args.in_dir) / infile)
-
-        if args.start_times and args.end_times:
-            ref_start = args.start_times[0]
-            if len(args.start_times) > 1:
-                inst_start = args.start_times[1]
-            else:
-                inst_start = ref_start
-            ref_end, inst_end = args.end_times
-            if inst_start == 0:
-                inst_start = ref_start
-            inst_start_offset = inst_start - ref_start
-            inst_drift = ((inst_end - ref_end) - inst_start_offset)\
-                / (ref_end - inst_start)
-            print('instrument start offset = {:g}s, drift rate = {:.4g}'
-                  .format(inst_start_offset, inst_drift))
-            # quality_flag = 'Q'  # Don't know how to put this in miniSEED
-        else:
-            ref_start, inst_start = lc_start, lc_start
-            inst_start_offset = 0
-            inst_drift = 0
-            warnings.warn('Could not calculate clock drift, assuming zero!')
-            # quality_flag = 'D'  # Don't know how to put this in miniSEED
-
-        lc_start_day = lc_start.replace(hour=0, minute=0, second=0,
-                                        microsecond=0)
-        lc_end_day = lc_end.replace(hour=0, minute=0, second=0, microsecond=0)
-        stime = lc_start_day
-        bar = IncrementalBar(f'Processing {infile}',
-                             max=(lc_end_day-lc_start_day)/86400 + 1)
-        while stime <= lc_end_day:
-            inst_offset = inst_start_offset + inst_drift * (stime - ref_start)
-            _write_daily(inst_offset, stime, infile, args, ls_times, ls_types)
-            bar.next()
-            stime += 86400
-        bar.finish()
-
-    return_code = 0
-    process_step.exit_code = return_code
-    process_step.write(args.in_dir, args.out_dir)
-    sys.exit(return_code)
+    return args, process_step
 
 
-def _write_daily(inst_offset, stime, infile, args, ls_times, ls_types):
+def _write_daily(inst_offset, stime, infile, args, ls_times, ls_types,
+                 qualityflag):
+    assert qualityflag in ['D', 'Q'], f'{qualityflag=} is not "D" or "Q"'
     starttime = stime + inst_offset
     endtime = starttime + 86400
     if args.verbose:
@@ -160,13 +238,18 @@ def _write_daily(inst_offset, stime, infile, args, ls_times, ls_types):
                     station=args.station,
                     obs_type=args.obs_type)
 
+    sampling_rate = None
     for tr in stream:
         s = tr.stats
+        if sampling_rate is None:
+            sampling_rate = s.sampling_rate
+        else:
+            assert s.sampling_rate == sampling_rate, "traces do not all have the same sampling rate!"
         # Correct leapsecond
         s.starttime += _leap_correct(stime, ls_times, ls_types)
         # Correct drift
         s.starttime -= inst_offset
-        # s.mseed['dataquality'] = quality_flag
+        s.mseed = {'dataquality': qualityflag}
 
         # Write file
         dirname = Path(args.out_dir) / 'SDS' / str(stime.year) /\
@@ -177,12 +260,13 @@ def _write_daily(inst_offset, stime, infile, args, ls_times, ls_types):
         dirname.mkdir(parents=True, exist_ok=True)
         tr.write(str(dirname / fname), format='MSEED',
                  encoding='STEIM1', reclen=4096)
+    return sampling_rate
 
 
 def _adjust_leapseconds(ls_times, ls_types):
     """
     Adjust leapsecond arguments
-    
+
     Converts times to UTCDateTime and makes sure there is one type
     for each time
     :param ls_times: list of strings
@@ -195,7 +279,7 @@ def _adjust_leapseconds(ls_times, ls_types):
     new_times = []
     for t in ls_times:
         if t[-2:] == '60':
-            t=t[:-2] + '59'
+            t = t[:-2] + '59'
         new_times.append(UTCDateTime(t))
     if not len(new_times) == len(ls_types):
         if len(ls_types) == 1:
@@ -209,7 +293,7 @@ def _adjust_leapseconds(ls_times, ls_types):
             raise ValueError(f"'{tp}' is not a valid leapsecond type")
     return new_times, ls_types
 
-                            
+
 def _leap_correct(starttime, ls_times, ls_types):
     """
     Return leap-second correction for a given time
@@ -224,16 +308,16 @@ def _leap_correct(starttime, ls_times, ls_types):
         return 0
     correct = 0
     for ls_time, ls_type in zip(ls_times, ls_types):
-        if starttime > ls_time - 1: # avoid overlap with leap seconds
-            if ls_type=='+':
+        if starttime > ls_time - 1:  # avoid overlap with leap seconds
+            if ls_type == '+':
                 correct -= 1  # Everything after an added second is one earlier
-            elif ls_type=='-':
+            elif ls_type == '-':
                 correct += 1
             else:
                 raise ValueError(f"'{ls_type}' is not a valid leapsecond type")
     return correct
-        
-        
+
+
 # ---------------------------------------------------------------------------
 # Run 'main' if the script is not imported as a module
 # ---------------------------------------------------------------------------
